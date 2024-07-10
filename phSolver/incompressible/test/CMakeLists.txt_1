@@ -1,0 +1,23 @@
+add_test(
+        NAME clean_test_1
+        COMMAND rm 16-procs_case/restart-dat.10.1 16-procs_case/restart-dat.10.2
+        WORKING_DIRECTORY ${PHASTA_SOURCE_DIR}/Test_Cases/Shrey_Sample_Test/
+        )
+
+add_test(
+        NAME clean_test_2
+        COMMAND cp numstart.dat 16-procs_case/
+        WORKING_DIRECTORY ${PHASTA_SOURCE_DIR}/Test_Cases/Shrey_Sample_Test/
+        )
+
+add_test(
+	NAME submit_test 
+	COMMAND ./submitjob
+	WORKING_DIRECTORY ${PHASTA_SOURCE_DIR}/Test_Cases/Shrey_Sample_Test/ 
+	)
+
+add_test(
+	NAME Complete_Run
+	COMMAND python test.py
+	WORKING_DIRECTORY ${PHASTA_SOURCE_DIR}/Test_Cases/Shrey_Sample_Test/
+	)	

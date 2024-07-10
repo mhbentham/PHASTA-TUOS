@@ -1,0 +1,40 @@
+!  Average.f
+!
+!  FUNCTIONS:
+!       Average      - Entry point of console application.
+!
+!**********************************************************************************************************
+!
+!  PROGRAM: Average
+!
+!  PURPOSE:   Window-Averaging DNS data provided by PHASTA in for use in NPHASE
+! Version 3.0. Now includes the dissipation rate averaging: based on
+!             04/28/2009.  strain tensor provided in the varts files
+! Version 4.0. Now processes two meshes at a time (for High and Low
+!             Re k-e model runs in NPHASE) 05/04/2009.
+! Version 5.0: Computes the mirror error to estimate the error dependence
+!              upon the averaging window width.
+! Version 6.0: Uses a single binary file as an input
+! Version 8.0: Trying to re-implement all the updates lost in the /bigtmp filesystem failure (!)
+! Version 8.1: Adding the volume fraction / 2nd phase velocity computation
+! Version 8.2: Adding an ability to compute a measure of variation of two-phase and
+!               turbulence parameters among the runs (to determine how independent they are)
+! Version 8.3: Several z-planes are processed; Igor, April 2010.
+! Version 9.0: Shear stress and turbulent shear stress computation is added: Igor, May 2010.
+! Version 9.1: Phasic Flow rate time history computation is added: Igor, May 2010.
+! Version 10.0: TKE Source terms computation is added: Production and Diffusion is computed: Igor, June 2010.
+! Version 10.1: p' computation is implemented (p was used intead earlier): Igor, July 2010.
+! Version 10.2: symmetry treatment in the homogeneous implementation is corrected for the source terms computation: Igor. August 2010.
+! Version 11.0: further updates to fix bugs when symmetry is used
+! Version 11.1: a flag is introduced to put the second point in the end (Pointwise issue when the points were exported from NPHASE mesh for channel flows).
+! Version 11.2: pressure is again averaged over the window (additional pressure adjustment are introduced in the Merge 4.0 code)
+! Version 11.3: Treatment of 19 variables is introduces (they are not actually used yet)
+! Version 11.4: Interfacial work term is computed (started the implementation on 11/10/2010)
+! Version 11.5: Curl vector is computed (no homogeneous directions averaging performed)
+! Version 11.6: Print the time window information in a separate file in a work directory
+! Version 11.7: Implemented a work-around for different structure of ROUGH_HEMI case (z-hom together, vs. different planes together in xyzts.dat file) - 09/18/2011
+! Version 12.0: Full (derivatives in all directions) TKE Source terms are now computed (valid not only in BL approximation). Is necessary for rough wall flows in particular. Igor - 09/26/2011.
+!               a) This is done using the "plane" feature, and coordinating the "plane" locations for the proper derivatives can be taken numerically Igor: 11/10/2011.
+!               b) Module structure is adopted
+!**********************************************************************************************************
+

@@ -1,0 +1,525 @@
+5/2008 Min Zhou 
+NSpre-serial, reorder DOF on vertices and regions using RCM algorithm if required.
+
+4/2008 Min Zhou
+NSpre-parallel, parition "time derivative of solution" and "displacement"
+in restart.*.0 if they are exist. if not, the program will not crash.
+
+3/2008 Min Zhou
+NSpre-serial link to FMDB, and make its own attribute
+make it work with both simmetrix and SCOREC tools
+
+5/10/2007 JM
+MeshSim 6.1 compatibility
+MeshSim linux adjustment in Makefile
+
+3/2/2007 JM
+MeshSim 6.0 compatibility:
+*Read the model separately as handling of attribute
+ case changed in API
+ case association fails without explicitely setting the
+ model to the case	
+ default model file names are geom.xmt_txt (PARASOL) 
+ or geom.sdm (DISCR); option -G specifies model file name 
+ on command line
+*functionalities that use mesh data base entity modification are
+ put on hold:
+ -Periodicity for p>2
+ -face_extraction (NSFTAG>=0)		 		
+* parasolid now is built into MeshSim
+* TO BE DONE: cygwin win compatibility check
+
+
+4/14/2006 EB
+changes for c1 quintic triangles are implemented
+
+1/16/2006 EB
+tagged v4_1_2
+works with 2D meshes for use with 2D scalar phasta
+if you want to use 1 scalar need to run the serial part with -v 5 (for 5 variables: 2 velocities, pressure, temperature and 1 scalar).
+
+12/05/2005 JM
+Makefile cleanup
+tagged v4_1_1
+
+11/28/2005 JM
+cleanup
+tagged v4_1_0
+
+11/22/2005 JM
+WIN compliance
+tagged v4_0_0
+
+make sure the following environment vars are set on cygwin:
+export CVSROOT=:pserver:<username>@cvs.scorec.rpi.edu:/export/cvsroot
+export DEVROOT='/home/<username>/develop'
+export MESHSIM='/users/SCOREC/public/meshSim/latest'
+export MESHSIM=`cygpath -w $MESHSIM`
+export SIM_LICENSE_FILE="C:/cygwin/users/SCOREC/public/meshSim/license/license.txt"
+
+Currently, this environment is set for user 'User' on sole
+
+the meshSim libs have been installed at that very location
+and the location of parasolid has been taken care of in the Makefile
+
+The following changes are critical to  code portability to Win:
+1) all STL header AHEAD of all other headers
+2) using namespace std; required
+3) Makefile needs specific paths for libs and includes
+4) special care has to be taken when fortran obkjects shall be linked
+   (see phAdapt for coding details: LU)
+
+
+
+3.7.0 (6/28/05)
+Changes to Makefiles for serial and parallel. This version work with meshSim
+latest which is 5.4-050616
+mdb2phasta.cc was also modified to work with this version of meshSim. It was
+tested for linux and suns.
+
+3.6.9 (7/27/04 )
+meshsim 5.2 compatible 
+compiles and runs on RH9
+
+3.6.7 (1/30/04)
+CVS: Modified Files:
+CVS: 	PartitionDriver.cc sonfath.f 
+
+Sonfath now works.
+"Number of nodes" is now written into geombc.dat.# needed for reduce
+
+
+checkout-tag v3_6_5
+
+NOTE: 3_6_4 is a bad(bad tot) tag..please checkout 3_6_5 instead
+
+v3_6_4,5( tagged over the 3rd week of september 03 ) ( retagged  Nov 6th )
+
+0.a small changes to the serial makefile to add sgi_6-64 options
+0.b MeshSimInternal.h fixed to avoid conflict with the latest meshsim (5.1.2)
+
+1. unnecessary periodicity loops removed for linear computations
+2. partition driver made memory efficient
+3. nspre_parallel can now be run for a 1 proc case also 
+( for using sonfath which doesn't work anyways :))
+
+3.6.3 (7/23/03) 
+CVS: Modified Files:
+CVS: 	CHANGES src-serial/Makefile src-serial/attachIBC.cc 
+CVS: 	src-serial/face_extraction.cc src-serial/refinement.cc 
+CVS: Added Files:
+CVS: 	src-serial/MeshSimInternal.h 
+
+
+Face connectivity arrays created for error estimation in phasta (only serial at this time.  to make parallel partion.cc in both phasta and in src-parallel is required). (Jens)
+
+Higher order (fixed order) restart capabilities restored (Anil)
+
+Linux build capability (beta) (Anil)
+
+Moved MeshSimInternal.h to our source  (and made function name change for
+	      nuke[2] = (pEntity)F_edOpVt(candidate,medge_candidate); (Anil)
+
+Added capability to write (pre-phastaIO) old format to be compatible with 1.6x.
+(you need to use phastaIO 1.6.3) (Elaine)
+
+
+3.6.2 (6/13/03) -- for phSOlver 1.8.0 and higher
+
+File: PartitionDriver.cc        Status: Modified
+File: F_exists.cc               Status: Modified
+File: Makefile                  Status: Modified
+File: SPEBC.cc                  Status: Modified
+File: gendual.cc                Status: Modified
+File: localInfo.cc              Status: Modified
+File: mdb2phasta.cc             Status: Modified
+File: refinement.cc             Status: Modified
+File: setPeriodic.cc            Status: Modified
+File: setup_n_refine.cc         Status: Modified
+
+mesh dual is now written to geombc.dat.1 in phastaIO format
+nspre_parallel now exits when given a 1 proc argument.
+other minor include changes etc to fix compilation errors.
+makefiles cleaned up
+
+3.6.1 (5/28/03)
+
+0. Variable P capable.
+1. only NSpre-Serial need to be run for serial cases. 
+2. Parallel Version gets support for SPEBC
+3. LocalInfo extensively revamped.
+4. all redundant multiproc loops and data structures ripped off from serial code.
+5. tested for compatability with phSolver 1.7.2
+
+3_5_0
+split 2 phase NSpre
+
+serial version still needs lot of work to remove redundant stuff
+parallel version needs to add support for SPEBC.
+
+3_4_8
+makefile changes to accomodate new cvsroot
+
+3_4_7 ( 3/7/2002 )
+1. Null model case introduced
+2. memory saving drive nearly complete.
+3. migrated to meshsim 3.3
+
+3_4_6 ( 2/27/2002 )
+1. a whole load of memory tweaks...
+   but no other functional changes.
+
+3_4_5 ( 2/8/2002 )
+
+1. problem with meshim parasolid fixed  ( mdb2phasta.cc )
+2. small bug introdued by formatting in setPeriodic.cc fixed 
+
+3_4_4 
+some source code formatting
+
+3_4_3
+
+Total independence from SCOREC libraries... or total dependence on meshsim :(
+
+3_4_0
+Committed and tagged on 5/29/2001
+Reversed the changes between 3_3_9 and 3_3_9_1 (the latter
+ can serve as a branch point for development and testing
+ of those changes)
+Fixed a periodicity bug (which involved modifying vs attaching
+ data)
+Changed the restart option such that it reads C-format files.
+
+3_3_9_1
+tagged as 4_0_0 and commited on 5/9/2001
+tagged as 3_3_9_1 and committed on 5/28/2001 (4_0_0 tag deleted)
+This version has no developmental changes.
+This version has been modified to remove the use of PList as a
+container. so a simple LinkedList has been introduced.
+
+This version should be completely compatible with AOMD when that
+interface is ready. (only minor changes to the Makefile will be needed)
+
+This version compiles with both MeshSim and SCOREC tools but is known
+to work only with MeshSim Libraries. 
+
+NewFiles added: F_exists.c F_coord.c
+Files removed: R_edges.c return_vertices.cc
+
+
+3_3_9
+tagged and commited on 4/29/2001
+This version implements full C-interfce to model and mesh and compiles
+with MeshSim libraries. 
+
+***Note***
+As of now, this version compiles only with MeshSim. due to lack of
+some functions in the scorec C interface. 4/29/01
+
+Files changed. All most all files. (to change headers , include ifdefs etc..)
+
+3_3_8
+tagged and commied on 4/22/2001
+The surface mesh extraction capability from 3_3_7 has been extended to handle
+a list of contiguous modelfaces. 
+
+ * the model can be loaded for this purpose without an atdb file
+   using the -d options
+
+ * the -T options takes the number of model faces as the argument and 
+   then prompts the user for the face tags
+ 
+ * NSpre quits after extracting the surface mesh of the give list of model
+   faces 
+
+3_3_7
+tagged and commited on 4/5/2001
+Added capability to output an ordered boundary mesh of the given model face.
+Also the boundary faces are reordered so that each face has atleast one free
+edge when it is encountered in the walk.
+
+*****IMPORTANT****
+
+The face reordering works only for trifaces.( tets )
+
+Files Added : src/face_extraction.cc
+Files modified : src/mdb2phasta.cc
+				 src/ccfunc.h
+3_3_6
+tagged and commit on 3/24/2001
+Changes in 3_3_5 brought to completion. 
+more key phrases standardized 
+ncorp is now a part of geombc.dat
+
+3_3_5 
+tagged and commited on 3/16/2001
+
+1. Keyphrase based pseudo random access implemented for PHASTA input
+   
+   all data items are of the format
+
+	keyphrase : skipsize a b c .....
+	[BINARY DATA BLOCK]
+
+	skipsize will be the size of the following binary DATA BLOCK following the
+	ascii line 
+
+	skipsize will be zero for items which do not have a BINARY DATA BLOCK
+	after them
+
+    the key phrases are case and space insensitive. but need to be delimited 
+	by a ":" . 
+
+	"#" is the comment character and can start anywhere in the line
+
+2. starting this version, NSpre echos its version when used with the -V option
+   and echos the version number and command line arguments and the date and
+   time of creation to the outputfiles.
+
+3. All files now have version numbers .. right now everthing is 1.0
+
+4. Compatible interface has been created for PHASTA and should be a part of
+   all tags above 1.6.0 , please confirm this by reading the PHASTA changes
+   file.
+
+5. BCB is nolonger calculated as a nodal quantity but one value per face is
+   calculated at the centroid. same as IBCB so we now restrict the input to
+   have only piecewise constant natural boundary conditions.
+
+6. Now byteorder is automatically recognized by reading a predefined magic
+   number "362436" and we have done away with all the ifdefs
+
+Files modified: 
+
+File: EnsaArrays.cc     Status: Locally Modified
+File: NaturalBC.cc      Status: Locally Modified
+File: func.h            Status: Locally Modified
+File: mdb2phasta.cc     Status: Locally Modified
+File: procArgs.c        Status: Locally Modified
+File: restart.c         Status: Locally Modified
+
+Files Added
+
+ phrase.c /* contains code for generating descriptive phrases for 
+			 connectivity blocks */
+
+-------------------------------------------------------------------------------
+3_3_4 
+tagged and commited on 3/11/2001
+
+The capability to handle pyramid elements on the boundary has been added.
+
+  for boundary Pyramids with a quadface on the boundary lcsyst == 5
+  for boundary Pyramids with a triface on the boundary lcsyst == 6
+
+the files where the modification was done are.
+
+File: R_entitiesBdry.c  Status: Locally Modified
+File: attachBC.cc       Status: Locally Modified
+File: genblock.cc       Status: Locally Modified
+File: getData.cc        Status: Locally Modified
+-------------------------------------------------------------------------------
+3_3_3
+tagged and commited on 3/5/2001  ( Ya I know , third tag today )
+
+Dynamic model averaging information included in the code 
+--> translates to --> sonfath is now a part of NSpre
+
+*** to activate this feature one needs to use -S flag with a numeric argument
+    for the number of homogenous directions.
+
+*** Actually this is like a third party module. 
+	anybody can plug in their own version of sonfath suitable for their
+    geometry by providing an equivalent of sonfath.f
+
+Files Added : sonfath.f :(  fortran back in the game.
+
+No files were removed.
+
+------------------------------------------------------------------------------
+
+3_3_2 
+tagged and commited on 3/5/2001 
+
+produces output for phasta versions 1_6_0 and higher
+versions prior to 1.6 absolutely will not work with this NSpre
+for older version use tag values upto 3_3_1
+
+Starting this version.. NSpre needs standard library support.
+
+Notable Changes
+---------------
+1) Topology polynomial order blocking done inside NSpre
+2) Format of output files changed to write data blockwise
+3) Moved form fortran unformatted data to C binary data.
+	now the code expects restartc.inp instead of restart.inp 
+	there is a conversion utility available to convert older 
+        restarts to new C binary format.
+
+4) code implemented to make binary output contain the byteorder information
+   which is later used in other programs to interpret data.
+5) End of life for petsc junk
+6) Most of the foundation for variable P laid in this version.
+
+Bugs Fixed
+----------
+1) attachable data tag for axisymmetry changed form "thta" to "teta" to
+   avoid memory corruption error
+
+2) change  made to PeriodicBC::getMaster() to avoid error on extremely narrow
+   periodic faces.
+
+3) bug fixed in NaturalBC::eval() to avoid suprious x value to be used in 
+   evaluation of surfid in case no other NBCs are set on a given face.
+
+
+Files added :  genblock.cc restart.c mdb2phasta.cc
+
+Files removed: mdb2ensa.cc, createBoundary.c all fortran files. :)
+               All petsc remnants CountNeighbours, writeSMSmap 
+--------------------------------------------------------------------------
+3_3_1 
+tagged and commited on 3/5/2001
+
+This tag is to move to the makefile structure using buildutil.
+the new makefile will be called NEWmakefile and will stay that way
+until we are sure that we don't need the old style Makefile.
+
+*) no developmental changes
+*) no bugs fixed 
+
+---------------------------------------------------------------------------
+3_3_0
+tagged and commited on 10/24/2000
+
+This is the version truly compatible with 64 bit on sgi and the New compiler
+in the SUN
+
+ Notable Changes
+
+ a) BCs are now interpolated correctly for quadratic modes for hexes
+    ( EssentialBC.cc)
+ b) Scalar flux is now NOT mistakenly written into heat flux
+ c) Edge and face flipping restored for periodic BCs , now a new geom2.sms 
+	is written out which has the flipped entities in that fashion. 
+        it remains to be seen how consistently it produces valid meshes.
+ d) Now one can specify an arbitrary mesh file with the -m option.
+ e) checking for the existence of mesh and attributes file implemented.
+ d) Now NSpre is built in two parts 
+       i) NSpre library ( independent of the modeller )
+      ii) NSpre Executable (dependent on the modeller )
+
+    by default a shared object libNSpre.so is created and linked in with
+    the executable as are the rest of the SCOREC modules.
+
+    if a static linking is desired then specify NOSHARED=1 on the
+    command line. This only makes a static archive of the NSpre Library ,
+    the rest of the  scorec modules are preferntially grabbed as shared
+    objects 
+ g) Exact point match is no longer required for Linear to Quadratic
+    interpolation. But the interpolation points are still expected to be on
+    the edges in "Y" direction.
+     
+ Important Note: when compiling on an SGI workstation, you have to specify
+                 the option  PWD=$PWD on the command line.
+
+
+3_2_9
+
+InitialCondition.cc was evaluation scalars even if they were specified
+through restart file  , This causes failure if they are removed from the GUI
+( as they should be )
+
+3_2_8
+
+This version is sgi-64 capable and is comapatible with the model/1.4 series
+of libraries
+
+3_2_7
+
+lots of bugs fixed in getData.c R_entities &BDry
+Mesh is not being modified to match masters and slaves for periodicity only
+a warning message is echoed to screen.
+
+
+3_2_6
+old bug in R_entitiesBdry fixed
+
+3_2_5
+
+Hex Factor removed ( watch out for more comments in this space !)
+
+3_2_4
+I don't remember what happened here. : ) 
+just some routine bugfix stuff I guess will update as soon as possible 
+
+3_2_3:
+
+a)  zScale goes 3D
+b)  NaturalBC fixed for scalars
+c)  Restart.inp is read once
+d)  Quadratic Soln Sampled from a finer linear mesh
+e)  Speed and Memory enhancements
+     i) entInfo broken into two the first part of which is thrown away as
+        soon as we are done with it, only the local eqn number of any entity
+        is remembered which is used in generating connectivity
+f) SGI_64 partial changes done.
+g) Face co-ordinate extraction for a specified model face. 
+
+ ***) Two new command line flags introduced -T and -I
+
+    -I for doing the linear->Quadratic sampling
+       { requires a geoml.sms for the linear mesh }
+    -T for specifying the face tag(following the flag)
+       for co-ordinate extraction 
+
+CVS: ----------------------------------------------------------------------
+CVS: Enter Log.  Lines beginning with `CVS: ' are removed automatically
+CVS:
+CVS: Committing in src
+CVS:
+CVS: Modified Files:
+CVS:    BoundaryCondition.h NaturalBC.cc R_entities.c attachBC.cc
+CVS:    ccfunc.h localInfo.c parallel.h procArgs.c setup.cc
+CVS:    writeEnsaFiles.cc wrunfmt.f
+CVS: ----------------------------------------------------------------------
+~
+
+3.2.2
+createBoundary now uses inverse classification 
+all dependency libraries steped up to the latest possible version
+
+3.2.1 
+
+BugFix in getData.c regarding the higherorder face modes
+
+3.2.0 (6/28/2000)
+
+This version adds Multitopology Hierarchic Capability.
+This version also localizes all DOF information for ease in extending to 
+varying the polynomial order locally.
+
+3.1.4 
+
+Demonstrating CVS
+
+3.1.3
+
+1. Change in the way Natural boundary conditions are specified.
+2. Surf ID 
+3, Change in BCB
+
+3.1.2 
+
+1. Makefile updated considerably to deal with problem regarding Shared
+   objects and also change in modeler options and other nifty features were
+   added 
+
+
+3.1.1
+
+1. This version has lost explicit specification of Axisymmetric BCs now they
+   are automatically discovered from periodic boundary conditions.
+
+2. cvs remove AxisymBC.cc AxisymBC.h
+

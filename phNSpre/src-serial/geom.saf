@@ -1,0 +1,28 @@
+# Bound/InitCond  tag  dim  value  
+#--------------------initial conditions--------------------
+initial pressure: 1 3 18.0
+initial velocity: 1 3 1.0 0.0 0.0
+#-----------------------------------------------------------
+
+#---------------------Boundary Conditions--------------------
+comp3: 1 2 1.5 1.0 0.0 0.0 #inflow bc. magnitude and direction
+natural pressure: 4 2 20.0 #outflow bc.
+comp3: 2 2 0.0 1.0 0.0 0.0 #wall noslip
+comp3: 3 2 0.0 1.0 0.0 0.0 #wall noslip
+comp3: 5 2 0.0 1.0 0.0 0.0 #wall noslip
+comp3: 6 2 0.0 1.0 0.0 0.0 #wall noslip
+comp3: 1 1 0.0 1.0 0.0 0.0
+comp3: 3 1 0.0 1.0 0.0 0.0
+comp3: 8 1 0.0 1.0 0.0 0.0
+comp3: 10 1 0.0 1.0 0.0 0.0
+surf ID: 2 2 100
+surf ID: 3 2 100
+surf ID: 5 2 100
+surf ID: 6 2 100 
+#-------------------------------------------------------------
+
+
+# The format of the file is: boundary or initial condition type followed
+# by ":" and ONE space, then the model entity tag, dim, and values, each
+# of them is seperated by ONE space.
+# input for comp3 and comp1 are magnitude and directions.

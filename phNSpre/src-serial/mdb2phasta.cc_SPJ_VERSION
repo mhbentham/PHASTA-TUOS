@@ -1,0 +1,402 @@
+////////////////////////////////////////////////////////////////////////
+//
+// This program generates the input files necessary to run PHASTA in 
+// parallel mode. All boundary conditions and communication data
+// structures are set up.
+// 
+// Modified for 2D meshes by Elaine Bohr Dec 2005
+// Modified for C1 quintic triangles by Elaine Bohr March 2006
+////////////////////////////////////////////////////////////////////////
+#include <cstdlib>
+#include <iostream>
+#include <fstream>
+#include <cstring>
+using namespace std;
+#include "nspre_data.h"
+#include "nspre_functions.h"
+
+#ifdef MODELER_DISCRETE
+#include "SimDiscrete.h"
+#endif
+
+#ifdef MODELER_SHAPES
+#include "MeshSimShapes.h"
+#endif
+
+#ifdef MODELER_PARASOLID
+#include "SimParasolidKrnl.h"
+#endif
+
+ void MA_init();
+#if ( defined MODELER_NULL )
+ pGModel MM_model( pMesh mesh );
+#endif 
+
+int globalP=-1, fType=0, rStart=0, intBC=0,
+    prCd=0,  zScale=0, old_format=0, nscalar=0;
+    
+extern int ensa_dof;
+extern bool c1quintic;
+pProgress prog;
+bool FaceConnectivity = 0;
+bool isReorder = 1;
+
+extern int WRITEASC;
+extern int lstep;
+extern int NSFTAG;
+
+int ICtyp;
+void *temp=0;
+pEntity vert;
+extern pMeshDataId shpfnNum;
+extern pMeshDataId ReorderR;
+
+globalInfo* info = new globalInfo;
+pMesh mesh;
+pGModel model;
+pMeshDataId poly;
+
+extern "C" void memprof( char* location );
+
+
+
+int
+main ( int argc, 
+       char* argv[] ) {
+    char    gname[100];
+    char    fname[100];
+    char    mname[100];
+    pACase acase;
+    pProgress progress;
+    MS_init();
+
+#ifdef SIM    
+    SimModel_start();
+    Sim_readLicenseFile(0);
+#endif
+    
+    // default filenames
+
+    strcpy(fname,"geom.spj");
+    strcpy(mname,"geom.sms");
+
+
+    // process command line arguements 
+    procArgs(argc, argv, fname, mname, gname);
+
+#if ( defined MODELER_DISCRETE )
+    SimDiscrete_start(0);
+#endif
+    
+#if ( defined MODELER_PARASOLID )
+    SimParasolid_start(1);
+#endif
+
+    string junk;
+    int atdbVersion;
+#ifdef SIM    
+    ifstream attFile( fname );
+
+    attFile >> junk;
+    attFile >> atdbVersion;
+    attFile.close();
+
+    cout << " Using attribute file :"<< fname  
+        <<" "<< junk <<" "<< atdbVersion << endl;
+#else
+    atdbVersion = 8; //for fake functions
+#endif
+
+    // initialize the attribute manager
+    pAManager attmngr = AMAN_load(fname);
+    if (attmngr == 0){
+        cerr << "Error: could not open attribute file " << fname << endl;
+        exit(-1);
+    }
+
+    if ( atdbVersion < 5 ) 
+        acase = AMAN_findCase(attmngr, "Analysis Case");
+
+    else 
+        acase = AMAN_findCase(attmngr, "geom");
+    if (acase == NULL){
+        if ( atdbVersion > 4 ) {
+            string casename;
+            cout << "please enter the casename to use :" ;
+            cin >> casename;
+            if ( !( acase = AMAN_findCase(attmngr, casename.c_str())) ) {
+                cerr << "Error: could not find attribute case" << casename << endl;
+                exit (-1);
+            }
+        } else {
+            cerr << "Error: could not find default attribute case" << endl;
+            exit( -1 );
+        }
+    }
+
+#if !(defined MODELER_NULL)
+    // switch between discrete and Parasolid
+    // associate the attribute case with the model
+#if  ( defined MODELER_PARASOLID )    
+     strcpy(gname,"geom.xmt_txt");
+     // pParasolidNativeModel pnModel;
+     pNativeModel pnModel;
+     pnModel = ParasolidNM_createFromFile(gname,0);  	// create Parasolid native model from part file
+     if(NM_isAssemblyModel(pnModel)) {
+       pGAModel amodel = GAM_createFromNativeModel(pnModel, prog);
+       NM_release(pnModel);
+       model = GM_createFromAssemblyModel(amodel, prog);
+       GM_release(amodel);
+       pnModel = GM_nativeModel(model);
+     }
+     else
+       model = GM_createFromNativeModel(pnModel, prog);
+     NM_release(pnModel);
+     AttCase_setModel  ( acase, model );
+    
+#endif
+#if  ( defined MODELER_DISCRETE)  
+     strcpy(gname,"geom.sdm");
+     model = DM_load(gname, progress);
+     AttCase_setModel  ( acase, model );
+#endif
+    AttCase_associate( acase ,prog);
+    if ( atdbVersion < 5 ) {
+        pACase prob = AMAN_findCase( attmngr, "Problem Specific Case" );
+        model = (pGModel)AttCase_model( prob );
+    } else {
+        model = (pGModel)AttCase_model( acase );
+    }
+
+#endif
+    
+    ifstream chkfp(mname);
+    if ( chkfp.bad() ) {
+        cerr << "Mesh file does not exist in the current directory" << endl;
+        exit(-1);
+    }
+    
+#if !(defined MODELER_NULL) 
+    /* Face Coordinate extraction
+     * currently does not work with null model */
+    
+    if (NSFTAG >= 0) {
+        mesh = M_new(0,model);
+#ifdef SIM
+        mesh = M_load(mname,model,prog);
+#else
+        M_load(mesh,mname);
+#endif
+        face_coordinate_extraction(mesh, model);
+        cout << " Exiting after writing face data \n" ;
+        exit(0);
+    }
+#endif
+    
+    // load the mesh
+    mesh = M_new(0,model);
+#ifdef SIM
+    mesh = M_load(mname,model, prog);
+#else
+    M_load(mesh,mname);
+#endif
+    memprof("mesh loaded");
+#if (defined MODELER_NULL)
+    
+    // in the event there no real model, we just create a fake one from the
+    // mesh and associate it with the attribute case.
+
+    model = MM_model( mesh );
+    pAModel amodel = AMAN_newAttModel( attmngr, model );
+    pACase prob = AMAN_findCase(attmngr, "Problem Specific Case");
+    AttCase_setModel( prob, amodel );
+    AttCase_associate( acase );
+
+#endif
+
+    // Setting nsd and number of variables for 2D or 3D meshes
+    if(M_numRegions(mesh)) {
+       info->nsd=3;
+    } else {
+       info->nsd=2;
+    }
+    if (ensa_dof == 0) {
+       ensa_dof=info->nsd + 2;
+    }   
+    nscalar = ensa_dof - info->nsd - 2;
+    if (c1quintic == true) {
+       nscalar = 0;
+       ensa_dof = 10;
+    }
+
+    // if user specifies the -p option then we have a constant P case else we
+    // have to deal with a "potential" variable P case.
+
+    shpfnNum =  MD_newMeshDataId( "shape function numbers" );
+    ReorderR =  MD_newMeshDataId("Reorder Region");
+    poly = MD_newMeshDataId( "polynomial order");
+    bool PolyNotSet=true;
+    if ( globalP < 0 ) { // nothing has been set 
+        pAttribute polynomial_order = GM_attrib( model, "polynomial order");
+        if ( polynomial_order ) {
+            PolyNotSet = false;
+            cout <<"Processing polynomial order expression" << endl;
+            // the polynomial order function has been defined, so we need to set
+            // it on each entity, based on the evaluated value of the expression
+            // at the centroid of the entity.
+            
+            EIter edgeIter = M_edgeIter( mesh );
+            while ( pEdge e = EIter_next( edgeIter ) ) {
+                pVertex v0 = E_vertex( e, 0 ); 
+                pVertex v1 = E_vertex( e, 1 ); 
+                double x0[3], x1[3];
+                V_coord( v0, x0 );
+                V_coord( v1, x1 );
+                for( int i=0; i < 3; i ++ ) {
+                    x0[i] += x1[i];
+                    x0[i] /= 2;
+                }
+                int p = ( int )AttributeTensor0_evalDS((pAttributeTensor0) polynomial_order, 
+                                                       const_cast<double*>(x0) );
+                if ( p > 1 ) EN_attachDataInt((pEntity)e, poly , p );
+            } 
+            EIter_delete( edgeIter );
+
+            FIter faceIter = M_faceIter( mesh );
+            while ( pFace f = FIter_next( faceIter ) ) {
+                pPList vertices = F_vertices( f, 1 );
+                double x0[3], x1[3];
+                int nV = PList_size( vertices );
+                for( int v=0; v < nV ; v++ ) {
+                    V_coord((pVertex)PList_item( vertices, v ), x1 );
+                    for( int x=0; x<3; x++ ) x0[x] += x1[x];
+                }
+                PList_delete( vertices );
+                for( int x=0; x<3; x++ ) x0[x] /= nV;
+                int p = ( int )AttributeTensor0_evalDS((pAttributeTensor0) polynomial_order, 
+                                                       const_cast<double*>(x0) );
+                if ( p > (nV-1) ) EN_attachDataInt((pEntity)f, poly , p );
+            }
+            FIter_delete( faceIter );
+
+            // for the moment we assume there will be no real region modes. We
+            // only keep a polynomial tag on regions so as to handle the
+            // connectivity of elements properly.
+            
+            // region modes start at p > 3 and we don't even have shapefunctions
+            // coded for that yet ... so we can come back here if we do p >3 
+            RIter regionIter = M_regionIter( mesh );
+            while ( pRegion region = RIter_next( regionIter )) {
+                // for each region we go over all the faces and edges of that
+                // region and get the max polynomial order 
+                int p = 1;
+                int entityP;
+
+                pPList fList = R_faces( region, 1 );
+                for( int i =0; i < PList_size( fList ); i++ ){ 
+                    EN_getDataInt((pEntity) PList_item( fList, i ), poly, &entityP );
+                    if ( entityP > p ) p = entityP;
+                }
+                PList_delete( fList );
+
+                pPList eList = R_edges( region, 1 ); 
+                for( int i =0; i < PList_size( eList ); i++ ){ 
+                    EN_getDataInt((pEntity) PList_item( eList, i ), poly, &entityP );
+                    if ( entityP > p ) p = entityP;
+                }
+                PList_delete( eList );
+
+                if ( p > 1 ) 
+                    EN_attachDataInt( (pEntity)region, poly, p );
+                if ( p > globalP ) globalP = p ;
+            }
+            RIter_delete( regionIter );
+
+        } else { // no polynomial order function has been set, so we assume that
+            // the intended polynomial order is 1 and set globalP=1
+            globalP=1;
+        }
+    }
+    if ( PolyNotSet ) {
+	if (info->nsd == 2){
+        /* mesh is 2D and poly order attached to faces */
+            FIter fIter = M_faceIter( mesh );
+            while ( pFace face = FIter_next( fIter ) ) 
+                EN_attachDataInt( (pEntity) face, poly, globalP );
+            FIter_delete( fIter );
+	} else{
+        /* mesh is 3D and poly order attached to regions */
+          RIter rIter = M_regionIter( mesh );
+          while ( pRegion region = RIter_next( rIter ) ) 
+            EN_attachDataInt( (pEntity) region, poly, globalP );
+          if ( globalP > 1 ) {
+            EIter eIter = M_edgeIter( mesh );
+            while ( pEdge edge = EIter_next( eIter ) ) 
+                EN_attachDataInt( (pEntity) edge, poly, globalP );
+            EIter_delete( eIter );
+          }
+          if ( globalP > 2 ) {
+            FIter fIter = M_faceIter( mesh );
+            while ( pFace face = FIter_next( fIter ) ) 
+                EN_attachDataInt( (pEntity) face, poly, globalP );
+            FIter_delete( fIter );
+          }
+	}
+    } 
+       
+    if( globalP > 0 ) cout << "\nPolynomial order: " << globalP << "\n";
+    else cout <<"\n variable polynomial order being processed. \n ";
+
+    if ( intBC == 1 ) readBC(model,mesh);
+
+    setPeriodic( model, mesh ); 
+    memprof("after setPeriodic");
+
+    setup_and_refine( model , mesh, info );
+    memprof("after part and dof generation");
+
+    // In 3D boundary is a face and in 2D it is an edge
+    if (info->nsd ==3){
+       vector<pFace> bdry;
+       genblock( mesh, model, bdry);
+       memprof("after blocking");
+       if(isReorder)
+           R_reordering(mesh);
+       writeEnsaFiles( model, mesh, (void*) &bdry );
+    } else {
+       vector<pEdge> bdry;
+       genblock2D( mesh, model, bdry);
+       memprof("after blocking");
+       writeEnsaFiles( model, mesh, (void*) &bdry );
+    }
+
+    //generate the dual and write it out
+
+    UserWeight(mesh);
+    gendual( model, mesh );
+
+    ofstream fstart("numstart.dat");
+    fstart << lstep << endl;
+    fstart.close();
+
+    // delete the mesh and close the mesh database 
+    MD_deleteMeshDataId( poly );
+    MD_deleteMeshDataId( shpfnNum );
+    MD_deleteMeshDataId( ReorderR);
+    M_release(mesh);
+    AMAN_release( attmngr );
+    GM_release(model);
+#ifdef SIM
+    SimModel_stop(  );
+#endif
+    
+#ifdef MODELER_PARASOLID
+    SimParasolid_stop(1);
+#endif
+    
+#ifdef MODELER_DISCRETE
+    SimDiscrete_stop(0);
+#endif
+    
+    MS_exit();
+}   

@@ -1,0 +1,28 @@
+When adding a new field to be reduced from restart.<stepnumber>.<numproc> the
+following files need to be updated:
+
+* reduce.cc:
+	- need to create a new boolean operator for the field
+	- which also needs to be initialised for the appropriate case
+	- add reading from restart.<stepnumber>.1 for allocation of global and
+	local arrays
+	- add reading all the data for this field from each processor and
+	reducing the data
+	
+* procArgs.cc:
+	- update the -h option for help
+	- add the appropriate option for this field to be used on the command
+	line
+	
+* ascii_output.cc:
+	- write the output to appropriate file <field_name>.asc.out
+	
+* wrtc.cc:
+	- needs to be modified to write dx file for visualisation
+	
+* phasta_output.cc:
+	- needs to be update to write the field in binary phasta format in
+	<field_name>.<stepnumber>.0
+	
+* tecplot_output.cc:
+	- for now only outputs solution field

@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="utf-8"?>
+<wc-entries
+   xmlns="svn:">
+<entry
+   committed-rev="563"
+   name=""
+   committed-date="2003-06-17T07:54:05.000000Z"
+   url="https://gforge.scorec.rpi.edu/svn/phasta/shapeFunction/trunk/src"
+   last-author="karana"
+   kind="dir"
+   uuid="7db5dced-4511-0410-b961-f9da6d424e44"
+   revision="1366"/>
+<entry
+   committed-rev="563"
+   name="parDrv.c"
+   text-time="2009-03-04T03:46:17.000000Z"
+   committed-date="2003-06-17T07:54:05.000000Z"
+   checksum="767a95629b3fdc0eea173c922cb39fe5"
+   last-author="karana"
+   kind="file"
+   prop-time="2009-03-04T03:46:15.000000Z"/>
+<entry
+   committed-rev="563"
+   name="Bn.c"
+   text-time="2009-03-04T03:46:18.000000Z"
+   committed-date="2003-06-17T07:54:05.000000Z"
+   checksum="5af349ecba5a53c7a561d8efac02e5ef"
+   last-author="karana"
+   kind="file"
+   prop-time="2009-03-04T03:46:15.000000Z"/>
+<entry
+   committed-rev="563"
+   name="uniformP.c"
+   text-time="2009-03-04T03:46:18.000000Z"
+   committed-date="2003-06-17T07:54:05.000000Z"
+   checksum="6a25da7d08d37e4bca0307c9e2fd1e9e"
+   last-author="karana"
+   kind="file"
+   prop-time="2009-03-04T03:46:16.000000Z"/>
+<entry
+   committed-rev="563"
+   name="blendDrv.c"
+   text-time="2009-03-04T03:46:18.000000Z"
+   committed-date="2003-06-17T07:54:05.000000Z"
+   checksum="907c377077b49aef73e2d45bc10e331c"
+   last-author="karana"
+   kind="file"
+   prop-time="2009-03-04T03:46:16.000000Z"/>
+<entry
+   committed-rev="563"
+   name="shapeFuncInternals.h"
+   text-time="2009-03-04T03:46:19.000000Z"
+   committed-date="2003-06-17T07:54:05.000000Z"
+   checksum="d132d868284690cbd6f015cb29b87c00"
+   last-author="karana"
+   kind="file"
+   prop-time="2009-03-04T03:46:16.000000Z"/>
+<entry
+   committed-rev="563"
+   name="En.c"
+   text-time="2009-03-04T03:46:19.000000Z"
+   committed-date="2003-06-17T07:54:05.000000Z"
+   checksum="9e8eaa0df037997136377b624c2acf71"
+   last-author="karana"
+   kind="file"
+   prop-time="2009-03-04T03:46:16.000000Z"/>
+<entry
+   committed-rev="563"
+   name="Fn.c"
+   text-time="2009-03-04T03:46:19.000000Z"
+   committed-date="2003-06-17T07:54:05.000000Z"
+   checksum="2ca4508a6c4693a10251d718f31c09b9"
+   last-author="karana"
+   kind="file"
+   prop-time="2009-03-04T03:46:17.000000Z"/>
+<entry
+   committed-rev="563"
+   name="modeShape.c"
+   text-time="2009-03-04T03:46:20.000000Z"
+   committed-date="2003-06-17T07:54:05.000000Z"
+   checksum="388e5211792f9e6707d80c7e064569fb"
+   last-author="karana"
+   kind="file"
+   prop-time="2009-03-04T03:46:17.000000Z"/>
+<entry
+   committed-rev="563"
+   name="BnDrv.c"
+   text-time="2009-03-04T03:46:20.000000Z"
+   committed-date="2003-06-17T07:54:05.000000Z"
+   checksum="d3de629671027aade784f97959eeac25"
+   last-author="karana"
+   kind="file"
+   prop-time="2009-03-04T03:46:17.000000Z"/>
+<entry
+   committed-rev="563"
+   name="EnDrv.c"
+   text-time="2009-03-04T03:46:17.000000Z"
+   committed-date="2003-06-17T07:54:05.000000Z"
+   checksum="812c2b2264e489d48750aa3c7dea15ec"
+   last-author="karana"
+   kind="file"
+   prop-time="2009-03-04T03:46:15.000000Z"/>
+<entry
+   committed-rev="563"
+   name="FnDrv.c"
+   text-time="2009-03-04T03:46:18.000000Z"
+   committed-date="2003-06-17T07:54:05.000000Z"
+   checksum="ed0541667a25f0969f2a89abaa4897cf"
+   last-author="karana"
+   kind="file"
+   prop-time="2009-03-04T03:46:15.000000Z"/>
+<entry
+   committed-rev="563"
+   name="Lagrange.c"
+   text-time="2009-03-04T03:46:18.000000Z"
+   committed-date="2003-06-17T07:54:05.000000Z"
+   checksum="8e778f98d6f35fc21f6cbab380788e7b"
+   last-author="karana"
+   kind="file"
+   prop-time="2009-03-04T03:46:16.000000Z"/>
+<entry
+   committed-rev="563"
+   name="TriShapeAndDrv.cc"
+   text-time="2009-03-04T03:46:19.000000Z"
+   committed-date="2003-06-17T07:54:05.000000Z"
+   checksum="d7caaea9322130488c9eceb68aca4d1f"
+   last-author="karana"
+   kind="file"
+   prop-time="2009-03-04T03:46:16.000000Z"/>
+<entry
+   committed-rev="563"
+   name="modeShapeDrv.c"
+   text-time="2009-03-04T03:46:19.000000Z"
+   committed-date="2003-06-17T07:54:05.000000Z"
+   checksum="b854d55005183eeca50192340afd15ea"
+   last-author="karana"
+   kind="file"
+   prop-time="2009-03-04T03:46:16.000000Z"/>
+<entry
+   committed-rev="563"
+   name="blend.c"
+   text-time="2009-03-04T03:46:19.000000Z"
+   committed-date="2003-06-17T07:54:05.000000Z"
+   checksum="70b100a320a869b3357ae11526742a5a"
+   last-author="karana"
+   kind="file"
+   prop-time="2009-03-04T03:46:17.000000Z"/>
+</wc-entries>

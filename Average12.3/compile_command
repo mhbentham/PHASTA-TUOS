@@ -1,0 +1,3 @@
+ifort -debug inline-debug-info -ccdefault none -fixed -132 -o Runme_Average Average.f
+#ifort -static -fixed -132 -o Runme_Average Average.f
+

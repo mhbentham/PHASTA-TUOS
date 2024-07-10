@@ -1,0 +1,35 @@
+! This is the parameters input file for the Average code
+! Ver. 11.0 from 01/01/2011
+! This line is reserved for additional info
+!
+!
+! Number of runs:
+      1 
+! Number of points in homogeneous directions:
+       42
+! The symmetric points flag (if second number = 1 then only one half of the channel is processed):
+	1 0
+! Number of x-planes for average: 
+       	3
+! First t/s; Number of timesteps for average:
+	31600 41100
+! Width of the averaging window, in seconds
+	125
+! Nphase timesteip:
+        125
+! Fluid kinematic viscosity(ies)
+       	0.0001355932 7.9918E-06
+! This is the interface half-thickness parameter (case-dependent):
+       	0.03
+! This is domain length (used for computing flow-throughs, case-dependent):
+       	6.2831854820
+! Updated Nskip:
+        4	
+! NPHASE cell area file available:
+        0	
+! Correct the sequence of points (moves the second point to the last place - needed to some channel flows)
+ 	0
+! Print Curl vector
+	0
+
+
