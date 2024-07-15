@@ -9,6 +9,8 @@ export ACUSOLVE_LIB
 
 #source /home/ctai2/intel/oneapi/setvars.sh
 
+#Need to source an environment with the correct compilers. This step will
+#depend on the compilers you have available on your machine
 source /home/mhbentham/development/envs/env_intertrack.sh
 
 

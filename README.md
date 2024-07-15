@@ -6,6 +6,8 @@ two-phase engineering flows.
 For more information, start at our
 [wiki page](http://bolotnov.ne.ncsu.edu/index.php?n=Main.HomePage)
 
+
+Below are the old instructions to compile the code for reference.
 ### How to compile ###
 
 If you are on insight.ne.ncsu.edu, run
