@@ -548,7 +548,10 @@ int input_fform(char inpfname[])
 
     //Linear Solver parameters
     inpdat.memLSFlag=0;    // memLS
-    if( (string)inp.GetValue("Solver Type") =="ACUSIM with P Projection" ){
+    inpdat.svLSFlag=0;     // Magnus, svLS (default is off)
+    if( (string)inp.GetValue("Solver Type") =="svLS" ){
+      inpdat.svLSFlag = 1;}   // Magnus, svLS
+    else if( (string)inp.GetValue("Solver Type") =="ACUSIM with P Projection" ){
       incomp.iprjFlag = 0; incomp.ipresPrjFlag=1;}
     else if ( (string)inp.GetValue("Solver Type") =="ACUSIM" ){
       incomp.iprjFlag = 0; incomp.ipresPrjFlag=0;}
