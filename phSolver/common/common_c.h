@@ -392,7 +392,12 @@ extern "C" {
     double CFLls_max;
     int iCFLls_maxelem;
     int memLSFlag;
+    int svLSFlag;
+    int svLSType;
   } inpdat ;
+// MB, in the above structure I have added the svLSFlag and svLSType
+// integers required for the svLS solver option  
+
 
   extern struct { 
     int iin;
