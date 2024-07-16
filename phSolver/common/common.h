@@ -163,13 +163,17 @@ c
      &                  EntropyPressure
 
 c
+c -----------------------------------------------------------------------
+c Magnus, block edited to include svLSType and svLSFlag variables
+        integer :: svLSType, svLSFlag
         common /inpdat/ epstol(6),  Delt(MAXTS),    CFLfl(MAXTS),
      &                  CFLsl(MAXTS),   nstep(MAXTS),   niter(MAXTS),
      &                  impl(MAXTS),    rhoinf(MAXTS),
      &                  LHSupd(6),  loctim(MAXTS),  deltol(MAXTS,2),
      &                  CFLfl_max, iCFLfl_maxelem, iflag_cfl_dt,
      &                  CFLfl_limit, timestart, CFLls_max, 
-     &                  iCFLls_maxelem, memLSFlag
+     &                  iCFLls_maxelem, memLSFlag, svLSFlag, svLSType
+c -----------------------------------------------------------------------
 c
         common /intdat/ intg(2,MAXTS),  intpt(3),       intptb(3)
 c
