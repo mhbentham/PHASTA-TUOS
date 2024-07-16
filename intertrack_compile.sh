@@ -1,4 +1,5 @@
 #!/bin/bash
+# this compile code is for the svLS version of PHASTA
 
 rm -rf build/*	# forcefully remove everything in the build directory
 cd build/	# enter the build directory
