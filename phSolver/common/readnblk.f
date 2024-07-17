@@ -211,7 +211,33 @@ c
 
          point2ilwork = ilworkread
          call ctypes (point2ilwork)
-      else
+      ! MAGNUS ----------------------------------------------------------
+      !if(svLSFlag.eq.1) then
+      !      fncorpsize = nshg
+      !      allocate(fncorp(fncorpsize))
+      !      call gen_ncorp(fncorp, ilworkread, nlwork, fncorpsize)
+            ! find the global range of the own nodes:
+      !      maxowned = 0
+      !      minowned=maxval(fncorp)
+      !      do i = 1, nshg
+      !            if(fncorp(i).gt.0) then
+      !                  maxowned=max(maxowned, fncorp(i))
+      !                  minowned=min(minowned, fncorp(i))
+      !            endif
+      !      enddo
+            ! end of global range code
+      ! MAGNUS -----------------------------------------------------------
+      !
+      !
+      else  ! serial
+            ! BEGIN MAGNUS ---------------------------------------------
+            !if(svLSFlag.eq.1) then
+            !      allocate(ltg(nshg))
+            !      do i = 1, nshg
+            !            ltg(i) = i
+            !      enddo
+            !endif
+            ! END MAGNUS ---------------------------------------------
          nlwork = 1
          allocate( point2ilwork(nlwork) )
          nshg0 = nshg
