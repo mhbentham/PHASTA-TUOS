@@ -40,6 +40,14 @@ c
         include "common.h"
         include "mpif.h"
         include "auxmpi.h"
+! BEGIN MAGNUS ----------------------------------------------------
+#ifdef HAVE_SVLS
+        include "svLS.h"
+#endif
+#if !defined(HAVE_SVLS)
+#error "You have not enabled the svLS linear solver during cmake setup"
+#endif
+  ! END MAGNUS ------------------------------------------------------
 c
         real*8 NewQImp(0:MAXSURF) !temporary unknown for the flow
                         !rate that needs to be added to the flow history
@@ -146,6 +154,18 @@ c!....Matt Talley's Bubble Coal Control
      &         app_time(coalest,2)
 
         real*8 itrtimestp
+
+! BEGIN MAGNUS -----------------------------------------------------------------------
+   ! setting up the svLS
+#ifdef HAVE_SVLS
+      INTEGER svLS_nFaces
+      TYPE(svLS_lhsType) svLS_lhs
+      TYPE(svLS_lsType) svLS_ls
+   ! repeat for scalar solves (up to 4 at this time which is consistent with the rest of PHASTA)
+      TYPE(svLS_lhsType) svLS_lhs_S(4)
+      TYPE(svLS_lsType) svLS_ls_S(4)
+#endif
+! END MAGNUS
 
 !----------------------------------------------------------------------
 !       Initialize the current void fraction and constant used in
