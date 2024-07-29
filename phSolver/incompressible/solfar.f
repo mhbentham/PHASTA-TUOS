@@ -10,7 +10,15 @@
      &                   colm,       lhsK,       lhsP, 
      &                   solinc,     rerr,       tcorecp,
      &                   GradV,      elemvol_global,
-     &                   avgxcoordf, avgycoordf, avgzcoordf)
+     &                   avgxcoordf, avgycoordf, avgzcoordf
+! BEGIN MAGNUS --------------------------------------------------------------------     
+#ifdef HAVE_SVLS
+     &                  ,svLS_lhs, svLS_ls, svLS_nFaces)
+#else
+     &                  )
+#endif
+! Add the svLS parameters
+! END MAGNUS --------------------------------------------------------------------
 c
 c!----------------------------------------------------------------------
 c
@@ -66,6 +74,17 @@ c!#endif
       include "common.h"
       include "mpif.h"
       include "auxmpi.h"
+!
+! BEGIN MAGNUS --------------------------------------------------------------      
+#ifdef HAVE_SVLS
+      include "svLS.h"
+      ! declare the types for svLS_lhs and svLS_ls
+      TYPE(svLS_lhsType), INTENT(INOUT) :: svLS_lhs
+      TYPE(svLS_lsType), INTENT(INOUT) ::  svLS_ls
+#endif
+! include the svLS h file if necessary
+! END MAGNUS ----------------------------------------------------------------
+!
 c     
       real*8    y(nshg,ndof),             ac(nshg,ndof),
      &          yold(nshg,ndof),          acold(nshg,ndof),
@@ -103,6 +122,16 @@ c
       real*8    rerr(nshg,numerr),            rtmp(nshg,4),rtemp
       
       real*8    msum(4),mval(4),cpusec(10)
+!
+! BEGIN MAGNUS -----------------------------------------------------------------
+#ifdef HAVE_SVLS
+      INTEGER svLS_nFaces
+#endif
+! declare the svLS_nFaces variable if required
+      INTEGER dof, i, j, k, l
+      INTEGER, ALLOCATABLE :: incL(:)
+      REAL*8, ALLOCATABLE :: faceRes(:), Res4(:,:), Val4(:,:) 
+! END MAGNUS -------------------------------------------------------------------
 
 c!.... Matt Talley's Bubble Coal Control
       real*8 avgxcoordf(coalest), avgycoordf(coalest), avgzcoordf(coalest)
@@ -157,7 +186,52 @@ c           if (myrank .eq. master) write(*,*) 'ElmGMR is done'
 
             tmpres(:,:) = res(:,:)
             iblk = 1
+! BEGIN MAGNUS ----------------------------------------------------------------
+#ifdef HAVE_SVLS
+      if (svLSFlag .EQ. 1) THEN
+            ALLOCATE(faceRes(svLS_nfaces), incL(svLS_nFaces))
+            faceRes=zero
+            incL = 1
+            dof = 4
+            jsol = nsolt + isclr          ! Define jsol here
+            IF (.NOT.ALLOCATED(res4)) THEN
+                  ALLOCATE (Res4(dof,nshg), Val4(dof*dof, nnz_tot))
+            ENDIF 
 
+            DO i=1, nnz_tot
+                  Val4(1:3,i)       = lhsK(1:3,i)
+                  Val4(5:7,i)       = lhsK(4:6,i)
+                  Val4(9:11,i)      = lhsK(7:9,i)
+                  Val4(13:15,i)     = lhsP(1:3,i)
+                  Val4(16,i)        = lhsP(4,i)
+            END DO
+
+            DO i=1, nshg
+                  Do j=colm(i), colm(i+1) - 1
+                     k = rowp(j)
+                     DO l=colm(k), colm(k+1) - 1
+                        IF (rowp(l) .EQ. i) THEN
+                           Val4(4:12:4,l) = -lhsP(1:3,j)
+                           EXIT
+                        END IF
+                     END DO
+                  END DO
+            END DO
+
+            CALL svLS_SOLVE(svLS_lhs, svLS_ls, dof, Res4, Val4, incL, faceRes)
+             ! Following stats are commented out to focus on functionality
+             !if(myrank.eq.master) write(*,*) 'svLS outer iterations', svLS_ls%RI%itr
+             !statsflow(1)=1.0*svLS_ls%GM%itr
+             !statsflow(4)=1.0*svLS_ls%CG%itr
+             DO i=1, nshg
+                solinc(i,1:dof) = Res4(1:dof,i)
+             END DO
+      ENDIF 
+#endif
+
+#ifdef HAVE_LESLIB
+      if(leslib.eq.1) then
+! END MAGNUS -----------------------------------------------------------------------------------
 c.... lesSolve : main matrix solver
 c
       lesId   = numeqns(1)
@@ -284,7 +358,12 @@ c
 c#endif     
       
       ! End Time profiling output
-      
+
+! BEGIN MAGNUS ---------------------------------------------------------------
+#endif
+! stop using acusim solver
+! END MAGNUS -----------------------------------------------------------------
+
       call getSol ( usr, solinc )
 
       if (numpe > 1) then
@@ -313,7 +392,14 @@ c
      &                   ilwork,     shp,        shgl, 
      &                   shpb,       shglb,      rowp,     
      &                   colm,       lhsS,       solinc,
-     &                   cfl )
+     &                   cfl
+! BEGIN MAGNUS ---------------------------------------------------
+#ifdef HAVE_SVLS
+     &                   , svLS_lhs, svLS_ls, svLS_nfaces)
+#else
+     &                   )
+#endif
+! END MAGNUS -----------------------------------------------------
 c
 c----------------------------------------------------------------------
 c
@@ -347,6 +433,11 @@ c
       include "common.h"
       include "mpif.h"
       include "auxmpi.h"
+! BEGIN MAGNUS --------------------------------------------------------
+#ifdef HAVE_SVLS
+      include "svLS.h"
+#endif
+! END MAGNUS ----------------------------------------------------------
 c     
       real*8    y(nshg,ndof),             ac(nshg,ndof),
      &          yold(nshg,ndof),          acold(nshg,ndof),
@@ -372,7 +463,19 @@ c
      &          uAlpha(nshg,nsd),
      &          lesP(nshg,1),             lesQ(nshg,1),
      &          solinc(nshg,1),           cfl(nshg)
-      
+!    
+! BEGIN MAGNUS ----------------------------------------------------------
+#ifdef HAVE_SVLS
+      TYPE(svLS_lhsType), INTENT(INOUT) :: svLS_lhs
+      TYPE(svLS_lsType), INTENT(INOUT) :: svLS_ls
+      INTEGER svLS_nFaces
+#endif
+      INTEGER dof, i, j, k, l
+      INTEGER, ALLOCATABLE :: incL(:)
+      REAL*8, ALLOCATABLE :: faceRes(:), Res1(:,:), Val1(:,:)
+! declare the necessary variables for the svLS solver
+! END MAGNUS ------------------------------------------------------------
+!
 c     
 c.... *******************>> Element Data Formation <<******************
 c
@@ -390,7 +493,39 @@ c
      &             res,       iper,       ilwork,   
      &             rowp,      colm,       lhsS,
      &             cfl )
+! BEGIN MAGNUS ---------------------------------------------------------------
+#ifdef HAVE_SVLS
+      IF (svLSFlag .EQ. 1) THEN
+            ALLOCATE(faceRes(svLS_nFaces), incL(svLS_nFaces))
+            faceRes=zero
+            incL = 1
+            dof = 1
+            if (.NOT.ALLOCATED(Res1)) THEN
+                  ALLOCATE(Res1(dof,nshg), Val1(dof*dof,nnz_tot))
+            END IF
 
+            DO i=1, nshg
+                  Res1(1,i) = res(i,1)
+            END DO
+
+            DO i=1, nnz_tot
+                  !Val1(1,i)   = lhsS(i,jsol) ! see above jsol indexes for scalars
+                  Val1(1,i) = lhsS(i)      ! number of subscipts is incorrect so has been changed
+                  ! unsure about the allocated of lhsS in this loop statement (?)
+            END DO
+
+            CALL svLS_SOLVE(svLS_lhs, svLS_ls, dof, Res1, Val1, incL, faceRes)
+            ! stats are commented out below to focus on functionality 
+            !statssclr(1)=1.0*svLS_ls%RI%itr
+             DO i=1, nshg
+                solinc(i,1) = Res1(1,i)
+             END DO
+      ENDIF
+#endif
+      
+#ifdef HAVE_LESLIB
+      if(leslib.eq.1) then
+! END MAGNUS ---------------------------------------------------------------------
 c
 c.... lesSolve : main matrix solver
 c
@@ -417,7 +552,11 @@ c
       if (numpe > 1) then
          call commu ( solinc, ilwork, 1, 'out')
       endif
-      
+! BEGIN MAGNUS --------------------------------------------------------------
+      ENDIF ! leslib conditional
+#endif
+! HAVE_LESLIB conditional
+! END MAGNUS ----------------------------------------------------------------
       nsolsc=5+isclr
       call rstaticSclr (res, y, solinc, nsolsc) ! output scalar stats
 c     
