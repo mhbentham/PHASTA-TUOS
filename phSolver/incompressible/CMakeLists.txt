@@ -8,7 +8,7 @@ list(REMOVE_ITEM SRC_FILES "main.c")
 add_library(incompressible ${SRC_FILES})
 find_library(ACUSOLVE_LIB libles)
 
-#Magnus------------------------------------------------------------------
+# BEGIN MAGNUS------------------------------------------------------------------
 # Block prepares for using svLS by setting a definition if enabled, and
 # sending a message if it has not been enabled
 if(PHASTA_USE_SVLS)
@@ -20,7 +20,12 @@ if(NOT PHASTA_USE_SVLS)
 	"You have not enabled svLS. You must enable it via \
 	PHASTA_USE_SVLS")
 endif()
-#Magnus------------------------------------------------------------------
+
+# add the LES_LIB FLAG for the acusim solver
+if (PHASTA_USE_LESLIB)
+	add_definitions(-DHAVE_LESLIB)
+endif()
+# END MAGNUS------------------------------------------------------------------
 
 if(PHASTA_USE_MPI)
 	include_directories(${MPI_INCLUDE_PATH} ${MPI_Fortran_INCLUDE_PATH})
@@ -48,7 +53,7 @@ if(PHASTA_USE_MPI)
 	target_link_libraries(phastaIC.exe ${MPI_LIBRARIES} ${MPI_Fortran_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT}) 
 endif(PHASTA_USE_MPI)
 
-#Magnus-----------------------------------------------------------------------
+# BEGIN MAGNUS-----------------------------------------------------------------------
 #  	this block is a work in process, some of the variables have not been declared yet
 # 	and so will likely lead to errors
 # The UOCB links the libraries using the PHASTA_COMMON_LIBS library as such:
@@ -65,8 +70,8 @@ endif(PHASTA_USE_MPI)
 
 #However, we havent defined this variable, instead we will try to link the libraries using the following:
 target_link_libraries(phastaIC.exe svLS)
-target_link_libraries(phastaIC.exe svLS incompressible)
-#Magnus-----------------------------------------------------------------------
+#target_link_libraries(phastaIC.exe svLS incompressible)
+# END MAGNUS-----------------------------------------------------------------------
 
 target_link_libraries(phastaIC.exe ${ACUSOLVE_LIB})
 target_link_libraries(phastaIC.exe common incompressible phMetis common phMetis phastaIO)
@@ -77,6 +82,13 @@ if(PHASTA_BUILD_PHSHAPE)
 	target_link_libraries(phastaIC.exe phshape)
 endif(PHASTA_BUILD_PHSHAPE)
 target_link_libraries(phastaIC.exe ${ACUSOLVE_LIB} incompressible)
+
+#-----------------------------------------------------------------
+# BEGIN MAGNUS
+# link svLS library
+target_link_libraries(phastaIC.exe svLS incompressible)
+# END MAGNUS
+#-----------------------------------------------------------------
 
 if(PHASTA_TESTING)
   add_subdirectory(test)
