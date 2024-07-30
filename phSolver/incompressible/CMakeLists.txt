@@ -67,13 +67,16 @@ endif(PHASTA_USE_MPI)
 #	incompressible
 #	${PHASTA_COMMON_LIBS})
 #endif()
+# END MAGNUS--------------------------------------------------------------------------
 
+target_link_libraries(phastaIC.exe ${ACUSOLVE_LIB})
+
+# BEGIN MAGNUS---------------------------------------------------------------------
 #However, we havent defined this variable, instead we will try to link the libraries using the following:
 target_link_libraries(phastaIC.exe svLS)
 #target_link_libraries(phastaIC.exe svLS incompressible)
 # END MAGNUS-----------------------------------------------------------------------
 
-target_link_libraries(phastaIC.exe ${ACUSOLVE_LIB})
 target_link_libraries(phastaIC.exe common incompressible phMetis common phMetis phastaIO)
 if(PHASTA_BUILD_SHAPEFUNCTION)
 	target_link_libraries(phastaIC.exe shapeFunction)
