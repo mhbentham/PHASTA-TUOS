@@ -40,14 +40,10 @@ c
         include "common.h"
         include "mpif.h"
         include "auxmpi.h"
-! BEGIN MAGNUS ----------------------------------------------------
-#ifdef HAVE_SVLS
+! ---------------------------------------------------------------------
         include "svLS.h"
-#endif
-#if !defined(HAVE_SVLS)
-#error "You have not enabled the svLS linear solver during cmake setup"
-#endif
-  ! END MAGNUS ------------------------------------------------------
+! --------------------------------------------------------------------
+! Magnus
 c
         real*8 NewQImp(0:MAXSURF) !temporary unknown for the flow
                         !rate that needs to be added to the flow history
@@ -155,17 +151,19 @@ c!....Matt Talley's Bubble Coal Control
 
         real*8 itrtimestp
 
-! BEGIN MAGNUS -----------------------------------------------------------------------
-   ! setting up the svLS
+!----------------------------------------------------------------------
+!       Setting up the svLS solver
 #ifdef HAVE_SVLS
       INTEGER svLS_nFaces
       TYPE(svLS_lhsType) svLS_lhs
       TYPE(svLS_lsType) svLS_ls
-   ! repeat for scalar solves (up to 4 at this time which is consistent with the rest of PHASTA)
+! repeat for scalar solves (up to 4 at this time which is consistent with rest
+! of PHASTA)
       TYPE(svLS_lhsType) svLS_lhs_S(4)
       TYPE(svLS_lsType) svLS_ls_S(4)
 #endif
-! END MAGNUS
+!----------------------------------------------------------------------
+!       Magnus
 
 !----------------------------------------------------------------------
 !       Initialize the current void fraction and constant used in
@@ -238,7 +236,7 @@ c!....Matt Talley's Bubble Coal Control
         rCommu = zero
 !MR CHANGE END
 
-        call SolverLicenseServer(servername)
+!        call SolverLicenseServer(servername)
 c
 c only master should be verbose
 c
@@ -348,14 +346,42 @@ c          if (myrank .eq. master) write(*,*) 'l.210'
         endif
 !MR CHANGE END
 
+!--------------------------------------------------------------
+ !        allocate (aperm(nshg,nPermDims))
+  !       allocate (atemp(nshg,nTmpDims))
+  !       allocate (lhsP(4,nnz_tot))
+   !      allocate (lhsK(9,nnz_tot))
+! -------------------------------------------------------------
+
+
+
+
+
+!----------------------------------------------------------------
+! initialise the svLS solver
+       call initEQS(iBC, rowp, colm,svLS_nFaces,
+     2               svLS_LHS,svLS_ls,
+     3               svLS_LHS_S,svLS_ls_S)
+! Magnus
+!----------------------------------------------------------------
+
+
+
+
+! I think the above block of Farzins library can be replaced by the call above.
+
+
+
+
+
 c
 c.... ---------> initialize Farzin''s Library <---------------
 c
 c.... assign parameter values
 c     
-        do i = 1, 100
-           numeqns(i) = i
-        enddo
+!!        do i = 1, 100
+!           numeqns(i) = i
+!        enddo
         nKvecs       = Kspace
         prjFlag      = iprjFlag
         presPrjFlag  = ipresPrjFlag
@@ -363,8 +389,8 @@ c
 c
 c.... determine how many scalar equations we are going to need to solve
 c
-      nsolt=mod(impl(1),2)      ! 1 if solving temperature
-      nsclrsol=nsolt+nsclr      ! total number of scalars solved At
+!      nsolt=mod(impl(1),2)      ! 1 if solving temperature
+!      nsclrsol=nsolt+nsclr      ! total number of scalars solved At
                                 ! some point we probably want to create
                                 ! a map, considering stepseq(), to find
                                 ! what is actually solved and only
@@ -373,94 +399,103 @@ c
                                 ! "failed" attempt at this).
 
 
-      nsolflow=mod(impl(1),100)/10  ! 1 if solving flow
-c        call MPI_Barrier(MPI_COMM_WORLD)
-c          if (myrank .eq. master) write(*,*) 'l. 221 itrdrv.f'
+!      nsolflow=mod(impl(1),100)/10  ! 1 if solving flow
+!c        call MPI_Barrier(MPI_COMM_WORLD)
+!c          if (myrank .eq. master) write(*,*) 'l. 221 itrdrv.f'
 
-c
-c.... Now, call Farzin''s lesNew routine to initialize
-c     memory space
-c
-c        call MPI_Barrier(MPI_COMM_WORLD)
-c           if (myrank .eq. master) write(*,*) 'call genadj...', icnt
-      call genadj(colm, rowp, icnt )  ! preprocess the adjacency list
-c          if (myrank .eq. master) write(*,*) 'l. 230 itrdrv.f'
+!c
+!c.... Now, call Farzin''s lesNew routine to initialize
+!c     memory space
+!c
+!c        call MPI_Barrier(MPI_COMM_WORLD)
+!c           if (myrank .eq. master) write(*,*) 'call genadj...', icnt
+!      call genadj(colm, rowp, icnt )  ! preprocess the adjacency list
+!c          if (myrank .eq. master) write(*,*) 'l. 230 itrdrv.f'
 
-      nnz_tot=icnt ! this is exactly the number of non-zero blocks on
+!      nnz_tot=icnt ! this is exactly the number of non-zero blocks on
                    ! this proc
 
-      if (nsolflow.eq.1) then
-         lesId   = numeqns(1)
-         eqnType = 1
-         nDofs   = 4
-c         if (myrank .eq. master) write(*,*) 'l. 247 itrdrv.f'
-         call myfLesNew( lesId,   41994,
-     &                 eqnType,
-     &                 nDofs,          minIters,       maxIters,
-     &                 nKvecs,         prjFlag,        nPrjs,
-     &                 presPrjFlag,    nPresPrjs,      epstol(1),
-     &                 prestol,        verbose,        statsflow,
-     &                 nPermDims,      nTmpDims,      servername  )
+!      if (nsolflow.eq.1) then
+!         lesId   = numeqns(1)
+!         eqnType = 1
+!         nDofs   = 4
+!c         if (myrank .eq. master) write(*,*) 'l. 247 itrdrv.f'
+!         call myfLesNew( lesId,   41994,
+!     &                 eqnType,
+!     &                 nDofs,          minIters,       maxIters,
+!     &                 nKvecs,         prjFlag,        nPrjs,
+!     &                 presPrjFlag,    nPresPrjs,      epstol(1),
+!     &                 prestol,        verbose,        statsflow,
+!     &                 nPermDims,      nTmpDims,      servername  )
 
-c          if (myrank .eq. master) write(*,*) 'l. 256 itrdrv.f'
+!c          if (myrank .eq. master) write(*,*) 'l. 256 itrdrv.f'
 
-         allocate (aperm(nshg,nPermDims))
-         allocate (atemp(nshg,nTmpDims))
-         allocate (lhsP(4,nnz_tot))
-         allocate (lhsK(9,nnz_tot))
+! -------------------------------------------------------------
+!       THIS BLOCK IS EQUIVALENT TO call aSDF   
+c         allocate (aperm(nshg,nPermDims))
+c         allocate (atemp(nshg,nTmpDims))
+c         allocate (lhsP(4,nnz_tot))
+c         allocate (lhsK(9,nnz_tot))
+! -------------------------------------------------------------
 
-         call readLesRestart( lesId,  aperm, nshg, myrank, lstep,
-     &                        nPermDims )
+!         call readLesRestart( lesId,  aperm, nshg, myrank, lstep,
+!     &                        nPermDims )
 
-      else
-         nPermDims = 0
-         nTempDims = 0
-      endif
+!      else
+!         nPermDims = 0
+!         nTempDims = 0
+!      endif
 
-c          if (myrank .eq. master) write(*,*) 'l. 262 itrdrv.f'
+!c          if (myrank .eq. master) write(*,*) 'l. 262 itrdrv.f'
 
-      if(nsclrsol.gt.0) then
-       do isolsc=1,nsclrsol
-         lesId       = numeqns(isolsc+1)
-         eqnType     = 2
-         nDofs       = 1
-         presPrjflag = 0        
-         nPresPrjs   = 0       
-         prjFlag     = 1
-         indx=isolsc+2-nsolt ! complicated to keep epstol(2) for
+!      if(nsclrsol.gt.0) then
+!       do isolsc=1,nsclrsol
+!         lesId       = numeqns(isolsc+1)
+!         eqnType     = 2
+!         nDofs       = 1
+!         presPrjflag = 0        
+!         nPresPrjs   = 0       
+!         prjFlag     = 1
+!         indx=isolsc+2-nsolt ! complicated to keep epstol(2) for
                              ! temperature followed by scalars
-         call myfLesNew( lesId,            41994,
-     &                 eqnType,
-     &                 nDofs,          minIters,       maxIters,
-     &                 nKvecs,         prjFlag,        nPrjs,
-     &                 presPrjFlag,    nPresPrjs,      epstol(indx),
-     &                 prestol,        verbose,        statssclr,
-     &                 nPermDimsS,     nTmpDimsS,   servername )
-       enddo
-c
-c  Assume all scalars have the same size needs
-c
-c          if (myrank .eq. master) write(*,*) 'l. 285 itrdrv.f'
+!         call myfLesNew( lesId,            41994,
+!     &                 eqnType,
+!     &                 nDofs,          minIters,       maxIters,
+!     &                 nKvecs,         prjFlag,        nPrjs,
+!     &                 presPrjFlag,    nPresPrjs,      epstol(indx),
+!     &                 prestol,        verbose,        statssclr,
+!     &                 nPermDimsS,     nTmpDimsS,   servername )
+!       enddo
+!c
+!c  Assume all scalars have the same size needs
+!c
+!c          if (myrank .eq. master) write(*,*) 'l. 285 itrdrv.f'
 
        allocate (apermS(nshg,nPermDimsS,nsclrsol))
        allocate (atempS(nshg,nTmpDimsS))  !they can all share this
        allocate (lhsS(nnz_tot,nsclrsol))
-c
-c actually they could even share with atemp but leave that for later
-c
-      else
-         nPermDimsS = 0
-         nTmpDimsS  = 0
-      endif
+!c
+!c actually they could even share with atemp but leave that for later
+!c
+!      else
+!         nPermDimsS = 0
+!         nTmpDimsS  = 0
+!      endif
 
 
-
+! ---------------------------------------------------------------Farzins library
+! ends here
 
 c
 c...  prepare lumped mass if needed
 c
 c      if((flmpr.ne.0).or.(flmpl.ne.0)) call genlmass(x, shp,shgl)
+      write(*,*)'call genlmass'
       call genlmass(x, shp, shgl, iBC, iper, ilwork)
+
+
+! ---------------------------------------------------------------------------
+!       THIS ENTIRE BLOCK IS NOT FAMILIAR TO SVLS CODE
 c... compute element volumes
 c
       allocate(elem_local_size(numel))
@@ -469,6 +504,7 @@ c
       else
         allocate(elemb_local_size(1))
       endif
+      write(*,*)'call getalsize'
       call getelsize(x,  shp,  shgl,  elem_local_size,
      &               shpb, shglb,  elemb_local_size,
      &               elemvol_global)  
@@ -494,7 +530,7 @@ c! Initialize Level Set CFL array
 c
        CFLls = zero
 c
-c! set flag for freezing LS Scalar 2
+!        write(*,*) 'set flag for freezing LS Scalar 2'
 c
             if (iSolvLSSclr2.eq.2) then
               allocate (iBCredist(nshg))
@@ -511,11 +547,11 @@ c
            primvert(inode) = 0
            primvertval(inode,1) = zero 
            primvertval(inode,2) = zero
-c           write(*,*) "primvertval, inode = ", primvertval(inode,1),
-c     &                                  primvertval(inode,2), inode
+!           write(*,*) "primvertval, inode = ", primvertval(inode,1),
+!     &                                  primvertval(inode,2), inode
           enddo
         endif
-c           if (myrank .eq. master) write(*,*) 'initialization is done'
+!           if (myrank .eq. master) write(*,*) 'initialization is done'
 
 c
 c!.... -----------------> End of initialization <-----------------
@@ -536,9 +572,15 @@ c!.... Initialize for Matt Talley's Coalescence Control
          itrtimestp = 0.0d0
       endif
 
+
+        write(*,*)'end of Coalescence control'
+
+!--------------------------------------------------------------------------------------
+
+!
 c!.....open the necessary files to gather time series
 c
-c          if (myrank .eq. master) write(*,*) 'l. 360 itrdrv.f'
+          if (myrank .eq. master) write(*,*) 'l. 360 itrdrv.f'
 
       lstep0 = lstep+1
 c
@@ -560,7 +602,7 @@ c
 
          call itrSetup ( y, acold )
 
-c          if (myrank .eq. master) write(*,*) 'l. 382 itrdrv.f'
+          if (myrank .eq. master) write(*,*) 'l. 382 itrdrv.f'
 
 
 
@@ -597,7 +639,7 @@ c  find the last solve of the flow in the step sequence so that we will
 c         know when we are at/near end of step
 c
 c         ilast=0
-c          if (myrank .eq. master) write(*,*) 'l. 417 itrdrv.f'
+          if (myrank .eq. master) write(*,*) 'l. 417 itrdrv.f'
 
          nitr=0  ! count number of flow solves in a step (# of iterations)
          do i=1,seqsize
@@ -700,7 +742,7 @@ c
 c ... calculate the pressure contribution that depends on the history 
 c     for the impendance BC
 c
-c          if (myrank .eq. master) write(*,*) 'l. 489 itrdrv.f'
+          if (myrank .eq. master) write(*,*) 'l. 489 itrdrv.f'
 
 
             if(numImpSrfs.gt.0) call pHist(pold,QHistImp,ImpConvCoef,
@@ -735,7 +777,7 @@ c
                call asbwmod(yold,   acold,   x,      BC,     iBC,
      &                      iper,   ilwork,  ifath,  velbar)
             endif
-c          if (myrank .eq. master) write(*,*) 'l. 521 itrdrv.f'
+          if (myrank .eq. master) write(*,*) 'l. 521 itrdrv.f'
 !MR CHANGE
 c
 c.... Determine whether the vorticity field needs to be computed for this time step or not
@@ -763,7 +805,7 @@ c
 c
 c.... -----------------------> predictor phase <-----------------------
 c
-c           if (myrank .eq. master) write(*,*) 'predictor phase'
+           if (myrank .eq. master) write(*,*) 'predictor phase'
             call itrPredict(yold, y,   acold,  ac ,  uold,  u)
 
 
@@ -802,7 +844,7 @@ c            do istepc=1,seqsize
 c               write(*,'(i5)') icode
 c               
                if(mod(icode,5).eq.0) then ! this is a solve
-c                write(*,'(a)') 'icode is a multiplier of 5'
+                write(*,'(a)') 'icode is a multiplier of 5'
                   isolve=icode/10
                   if(icode.eq.0) then ! flow solve (encoded as 0)
 c
@@ -815,7 +857,7 @@ c
                      HFlux    = zero
                      entrop   = zero
                      lhs = 1 - min(1,mod(ifuncs(1)-1,LHSupd(1))) 
-c             if (myrank .eq. master) write(*,*) 'SolFlow is about to be called'
+             if (myrank .eq. master) write(*,*) 'SolFlow is about to be called'
 
                      avgxcoordf(:) = -1.0d3
                      avgycoordf(:) = -1.0d3
@@ -834,9 +876,10 @@ c             if (myrank .eq. master) write(*,*) 'SolFlow is about to be called'
      &                         colm,          lhsK,      lhsP,
      &                         solinc,        rerr,      tcorecp,
      &                         GradV,         elemvol_global,
-     &                         avgxcoordf, avgycoordf, avgzcoordf)
-
-
+     &                         avgxcoordf, avgycoordf, avgzcoordf,
+     &                         svLS_lhs, svLS_ls, svLS_nFaces)
+       ! to above function, added svLS arguments, Magnus
+        write(*,*)'SolFlow succesffully called'
 c!....Matt Talley's Coalescence Contorl
                       if (coalcon.eq.1) then
                          if (coaltimtrak.eq.1) then
@@ -984,8 +1027,10 @@ c     Delt(1)= Deltt ! Give a pseudo time step
      &                         ilwork,        shp,       shgl,
      &                         shpb,          shglb,     rowp,     
      &                         colm,          lhsS(1,j), 
-     &                         solinc(1,isclr+5), CFLls)
-                        
+     &                         solinc(1,isclr+5), CFLls,
+     &                         svLS_lhs_S(isclr), svLS_ls_S(isclr), 
+     &                         svls_nfaces)
+                        ! added svLS variables, Magnus
                                 
                      endif
 
@@ -1791,23 +1836,29 @@ c
 c
 c.... end
 c
+
+
+!----------------------------------------------------------------------------------
       if(nsolflow.eq.1) then
-         deallocate (lhsK)
-         deallocate (lhsP)
-         deallocate (aperm)
-         deallocate (atemp)
-      endif
-      if(nsclrsol.gt.0) then
-         deallocate (lhsS)
-         deallocate (apermS)
-         deallocate (atempS)
-      endif
+          deallocate (lhsK)
+          deallocate (lhsP)
+          deallocate (aperm)
+          deallocate (atemp)
+       endif
+       if(nsclrsol.gt.0) then
+          deallocate (lhsS)
+          deallocate (apermS)
+          deallocate (atempS)
+       endif
       
-      if(iabc==1) deallocate(acs)
+       if(iabc==1) deallocate(acs)
 
       return
       end
+ !commented out to debug lhsP problem
+!---------------------------------------------------------------------------------
       
+
       subroutine lesmodels(y,     ac,        shgl,      shp, 
      &                     iper,  ilwork,    rowp,      colm,    
      &                     nsons, ifath,     x,   
@@ -1960,3 +2011,311 @@ c
       endif
       return
       end
+
+
+!------------------------------------------------------------------------------
+!       Here we will include the additional svLS subroutines required
+
+
+        subroutine initEQS(iBC, rowp, colm,svLS_nFaces,
+     2               svLS_LHS,svLS_ls,
+     3               svLS_LHS_S,svLS_ls_S)
+
+        !use solvedata          
+        !use fncorpmod
+        include "common.h"        
+        include "svLS.h"
+        include "mpif.h"
+        include "auxmpi.h"
+
+        TYPE(svLS_lhsType) svLS_lhs
+        TYPE(svLS_lsType) svLS_ls
+        TYPE(svLS_commuType) communicator
+        TYPE(svLS_lsType) svLS_ls_S(4)
+        TYPE(svLS_lhsType) svLS_lhs_S(4)
+        TYPE(svLS_commuType) communicator_S(4)
+        INTEGER svLS_nFaces, gnNo, nNo, faIn, facenNo
+
+
+
+        integer, allocatable :: gNodes(:)
+        integer, allocatable :: ltg(:)  !Magnus, ltg
+        real*8, allocatable :: sV(:,:)
+        character*1024    servername
+        character*128 fileName                  ! Magnus 
+        character*10 cname2nd                 ! Magnus
+        integer   rowp(nshg,nnz),         colm(nshg+1),
+     &            iBC(nshg)
+
+!----------------------------------------------------------------
+! additional allocations, Magnus
+        real*8, allocatable, dimension(:,:) :: lhsP, lhsK, lhsS
+
+        real*8, allocatable, dimension(:,:) :: aperm,  atemp, atempS
+        real*8, allocatable, dimension(:,:,:) :: apermS
+
+!----------------------------------------------------------------
+c     
+c.... For linear solver Library
+c
+c
+c.... assign parameter values
+c     
+        do i = 1, 100
+           numeqns(i) = i
+        enddo
+c
+c.... determine how many scalar equations we are going to need to solve
+c
+      nsolt=mod(impl(1),2)      ! 1 if solving temperature
+      nsclrsol=nsolt+nsclr      ! total number of scalars solved At
+! some point we probably want to create a map, considering stepseq(), to find
+! what is actually solved and only  dimension lhs to the appropriate
+! size. (see 1.6.1 and earlier for a "failed" attempt at this).
+
+      nsolflow=mod(impl(1),100)/10  ! 1 if solving flow
+c
+!c.... Now, call lesNew routine to initialize
+!c     memory space
+c
+      call genadj(colm, rowp, icnt )  ! preprocess the adjacency list
+
+      nnz_tot=icnt ! this is exactly the number of non-zero blocks on
+                   ! this proc
+
+      if (nsolflow.eq.1) then  ! start of setup for the flow
+        lesId   = numeqns(1)
+        eqnType = 1
+        nDofs   = 4
+
+
+!     Setting up svLS or leslib for flow
+        write(*,*)'svLSFLAG is ', svLSFLAG
+        IF (svLSFlag .EQ. 1) THEN
+
+
+!ifdef svLS_1 : opening large ifdef for svLS solver setup
+!#ifdef HAVE_SVLS 
+          !call aSDf
+          allocate (aperm(nshg,nPermDims))
+          allocate (atemp(nshg,nTmpDims))
+          allocate (lhsP(4,nnz_tot))
+          allocate (lhsK(9,nnz_tot))
+
+!---------------------------------------------------------------------------------
+! comment out the following as not important
+          IF(nPrjs.eq.0) THEN
+            svLSType=2  !GMRES if borrowed ACUSIM projection vectors variable
+!set to zero
+          ELSE
+            svLSType=3 !NS solver
+          ENDIF
+
+!---------------------------------------------------------------------------------
+!  reltol for the NSSOLVE is the stop criterion on the outer loop
+!  reltolIn is (eps_GM, eps_CG) from the CompMech paper
+!  for now we are using 
+!  Tolerance on ACUSIM Pressure Projection for CG and
+!  Tolerance on Momentum Equations for GMRES
+! also using Kspaceand maxIters from setup for ACUSIM
+!
+          eps_outer=40.0*epstol(1)  !following papers soggestion for now
+         write(*,*)'about to call svLS_LS_CREATE'
+          CALL svLS_LS_CREATE(svLS_ls, svLSType, dimKry=Kspace,
+     2      relTol=eps_outer, relTolIn=(/epstol(1),prestol/), 
+     3      maxItr=maxIters, 
+     4      maxItrIn=(/maxIters,maxIters/))
+
+          write(*,*)'about to call svLS_COMMU_CREATE'
+          CALL svLS_COMMU_CREATE(communicator, MPI_COMM_WORLD)
+          nNo=nshg
+          gnNo=nshgt
+!          write(*,*)'allocation of ltg'
+!           if((svLSFlag.eq.1)) then
+!           allocate(ltg(nshg))
+!           do i =1,nshg
+!             ltg(i)=i
+!           enddo
+!       endif
+
+
+!-------------------------------------------------------------------------------------
+        !deallocate(ltg)
+        write(*,*)'start of memLS inspired ltg block' 
+        IF (numpe .GT. 1) THEN
+            WRITE(fileName,*) myrank+1
+            fileName = "ltg.dat."//ADJUSTL(TRIM(fileName))
+      if (numpe.gt.idirtrigger) then
+        fileName = trim(cname2nd(int(myrank/idirstep)*idirstep))
+     1  //"-set/"//trim(fileName)
+      end if
+            OPEN(1,FILE=fileName)
+            READ(1,*) gnNo
+            READ(1,*) nNo
+            ALLOCATE(ltg(nNo))
+            READ(1,*) ltg
+            CLOSE(1)
+         ELSE
+            gnNo = nshg
+            nNo = nshg
+            ALLOCATE(ltg(nNo))
+            DO i=1, nNo
+               ltg(i) = i
+            END DO
+         END IF
+        !write(*,*)'end of memLS inspired ltg block. ltg is ', ltg
+!TEST, DELETE IF DOESNT WORK
+!-------------------------------------------------------------------------------------
+
+
+
+          IF  (ipvsq .GE. 2) THEN
+
+
+
+#if((VER_CORONARY == 1)&&(VER_CLOSEDLOOP == 1))
+               svLS_nFaces = 1 + numResistSrfs + numNeumannSrfs 
+     2            + numImpSrfs + numRCRSrfs + numCORSrfs
+#elif((VER_CORONARY == 1)&&(VER_CLOSEDLOOP == 0))
+               svLS_nFaces = 1 + numResistSrfs
+     2            + numImpSrfs + numRCRSrfs + numCORSrfs
+#elif((VER_CORONARY == 0)&&(VER_CLOSEDLOOP == 1))
+               svLS_nFaces = 1 + numResistSrfs + numNeumannSrfs 
+     2            + numImpSrfs + numRCRSrfs
+#else
+               svLS_nFaces = 1 + numResistSrfs
+     2            + numImpSrfs + numRCRSrfs
+#endif
+
+          ELSE
+               svLS_nFaces = 1   !not sure about this...looks like 1 means 0 for
+!array size issues
+          END IF
+
+!---------------------------------------------------------------------------------
+          
+          svLS_nFaces = 1
+        
+          write(*,*)'calling svLS_LHS_CREATE...'
+          write(*,*)'nshg is ', nshg
+          !write(*,*)'fncorp is', fncorp
+          !write(*,*) 'fncorpsize is', fncorpsize
+          !write(*,*)'ltg is ', ltg
+          CALL svLS_LHS_CREATE(svLS_lhs, communicator, gnNo, nNo,
+     &         nnz_tot, ltg, colm, rowp, svLS_nFaces)
+          write(*,*)'called svLS_LHS_CREATE succesfully'
+          faIn = 1
+          facenNo = 0
+          DO i=1, nshg
+               IF (IBITS(iBC(i),3,3) .NE. 0)  facenNo = facenNo + 1
+          END DO
+          ALLOCATE(gNodes(facenNo), sV(nsd,facenNo))
+          sV = 0D0
+          j = 0
+          DO i=1, nshg
+               IF (IBITS(iBC(i),3,3) .NE. 0) THEN
+                  j = j + 1
+                  gNodes(j) = i
+                  IF (.NOT.BTEST(iBC(i),3)) sV(1,j) = 1D0
+                  IF (.NOT.BTEST(iBC(i),4)) sV(2,j) = 1D0
+                  IF (.NOT.BTEST(iBC(i),5)) sV(3,j) = 1D0
+               END IF
+          END DO
+          write(*,*)'calling svLS_BC_CREATE'
+          CALL svLS_BC_CREATE(svLS_lhs, faIn, facenNo, 
+     2         nsd, BC_TYPE_Dir, gNodes, sV)
+          DEALLOCATE(gNodes)
+          DEALLOCATE(sV)
+! else of ifdef svLS_1 
+        ELSE
+          if(myrank.eq.0) write(*,*) 'you have not enabled CMAKE'
+          call error('itrdrv  ','nosVLS',svLSFlag)  
+! endif of ifdef svLS_1 
+!#endif
+        ENDIF !of svLS init. inside ifdef so we can trap above else
+! note input_fform does not allow svLSFlag=1 AND leslib=1 so above or below only
+
+
+        else   ! not solving flow at all so set it solverDims to zero
+         nPermDims = 0
+         nTmpDims = 0
+      endif
+
+!Above is setup for flow now we do scalar
+!        write(*,*)'final block of initEQs'
+      if(nsclrsol.gt.0) then
+       do isolsc=1,nsclrsol ! this loop sets up unique data for each scalar
+!solved
+         lesId       = numeqns(isolsc+1)
+         eqnType     = 2
+         nDofs       = 1
+         isclpresPrjflag = 0        
+         nPresPrjs   = 0       
+         isclprjFlag     = 1
+         indx=isolsc+2-nsolt ! complicated to keep epstol(2) for
+                             ! temperature followed by scalars
+
+!        write(*,*)'completed final block of initEQs'
+
+
+
+
+
+!  ifdef svLS_2 :   Setting up svLS for scalar
+
+!#ifdef HAVE_SVLS
+         IF (svLSFlag .EQ. 1) THEN
+           svLSType=2  !only option for scalars
+!  reltol for the GMRES is the stop criterion 
+! also using Kspaceand maxIters from setup for ACUSIM
+!
+           CALL svLS_LS_CREATE(svLS_ls_S(isolsc), svLSType, 
+     2      dimKry=Kspace,
+     3      relTol=epstol(indx), 
+     4      maxItr=maxIters 
+     5      )
+
+           CALL svLS_COMMU_CREATE(communicator_S(isolsc), 
+     2       MPI_COMM_WORLD)
+           
+           svLS_nFaces = 1   !not sure about this...should try it with zero
+
+           CALL svLS_LHS_CREATE(svLS_lhs_S(isolsc), 
+     2         communicator_S(isolsc), gnNo, nNo,
+     3         nnz_tot, ltg, colm, rowp, svLS_nFaces)
+                
+              faIn = 1
+              facenNo = 0
+              ib=5+isolsc
+              DO i=1, nshg
+                 IF (btest(iBC(i),ib))  facenNo = facenNo + 1
+              END DO
+              ALLOCATE(gNodes(facenNo), sV(1,facenNo))
+              sV = 0D0
+              j = 0
+              DO i=1, nshg
+               IF (btest(iBC(i),ib)) THEN
+                  j = j + 1
+                  gNodes(j) = i
+               END IF
+              END DO
+
+           CALL svLS_BC_CREATE(svLS_lhs_S(isolsc), faIn, facenNo, 
+     2         1, BC_TYPE_Dir, gNodes, sV(1,:))
+           DEALLOCATE(gNodes)
+           DEALLOCATE(sV)
+
+         ENDIF  !svLS handing scalar solve
+!#endif   
+
+       enddo  !loop over scalars to solve  (not checked to worked out for multiple svLS
+!solves
+       !call aSDs(nsclrsol)
+      !deallocate(lhsS)
+        
+      else !no scalar solves at all so zero dims not used
+         nPermDimsS = 0
+         nTmpDimsS  = 0
+      endif
+      return
+      end subroutine
