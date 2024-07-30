@@ -360,6 +360,7 @@ c#endif
       ! End Time profiling output
 
 ! BEGIN MAGNUS ---------------------------------------------------------------
+      endif
 #endif
 ! stop using acusim solver
 ! END MAGNUS -----------------------------------------------------------------
@@ -524,7 +525,7 @@ c
 #endif
       
 #ifdef HAVE_LESLIB
-      if(leslib.eq.1) then
+      IF(leslib.eq.1) THEN
 ! END MAGNUS ---------------------------------------------------------------------
 c
 c.... lesSolve : main matrix solver
