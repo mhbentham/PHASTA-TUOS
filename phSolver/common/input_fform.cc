@@ -571,8 +571,8 @@ int input_fform(char inpfname[])
     solpar.Kspace = inp.GetValue("Number of Krylov Vectors per GMRES Sweep");
     inpdat.LHSupd[0] = inp.GetValue("Number of Solves per Left-hand-side Formation");
     inpdat.epstol[0] = inp.GetValue("Tolerance on Momentum Equations");
-    //inpdat.epstol[6] = inp.GetValue("Tolerance on Continuity Equations");
-    //inpdat.epstol[7] = inp.GetValue("Tolerance on memLS NS Solver");
+    inpdat.epstol[6] = inp.GetValue("Tolerance on Continuity Equations"); //MB, uncommented line
+    inpdat.epstol[7] = inp.GetValue("Tolerance on svLS NS Solver");  //MB, added svLS tolerance
     incomp.prestol = inp.GetValue("Tolerance on ACUSIM Pressure Projection"); 
     incomp.minIters = inp.GetValue("Minimum Number of Iterations per Nonlinear Iteration");
     incomp.maxIters = inp.GetValue("Maximum Number of Iterations per Nonlinear Iteration");
