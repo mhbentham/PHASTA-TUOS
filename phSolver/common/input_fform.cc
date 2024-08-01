@@ -547,7 +547,7 @@ int input_fform(char inpfname[])
     }
 
     //Linear Solver parameters
-    inpdat.memLSFlag=0;    // memLS
+    inpdat.svLSFlag=0;    // svLS
     if( (string)inp.GetValue("Solver Type") =="ACUSIM with P Projection" ){
       incomp.iprjFlag = 0; incomp.ipresPrjFlag=1;}
     else if ( (string)inp.GetValue("Solver Type") =="ACUSIM" ){
@@ -560,8 +560,8 @@ int input_fform(char inpfname[])
       inpdat.impl[0] += 10*solflow;}
     else if( (string)inp.GetValue("Solver Type") =="GMRES EBE"){ 
       inpdat.impl[0] += 20*solflow;}
-    else if( (string)inp.GetValue("Solver Type") =="memLS"){    // memLS
-      inpdat.memLSFlag=1;}
+    else if( (string)inp.GetValue("Solver Type") =="svLS"){    // MAGNUS, svLS
+      inpdat.svLSFlag=1;}
     //GMRES sparse is assumed default and has the value of 10, MFG 20,
     // EBE 30
 
