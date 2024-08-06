@@ -40,6 +40,7 @@ c
         include "common.h"
         include "mpif.h"
         include "auxmpi.h"
+        include "svLS.h"   ! MB, include svLS lib
 c
         real*8 NewQImp(0:MAXSURF) !temporary unknown for the flow
                         !rate that needs to be added to the flow history
@@ -146,6 +147,22 @@ c!....Matt Talley's Bubble Coal Control
      &         app_time(coalest,2)
 
         real*8 itrtimestp
+
+! ---------------------------------------------------------------------------
+! MB block
+!  Setting up the svLS
+      integer svLS_nFaces_sc, svLS_nFaces, gnNo, nNo, faIn, facenNo
+      integer svLS_nFacesT, gnNoT, nNoT, faInT, facenNoT
+      integer, allocatable :: ltg(:), gNodes(:), gNodesT(:)
+      real*8, allocatable :: sV(:,:), svT(:,:)
+      
+      character*128 filename
+      TYPE(svLS_commuType) communicator
+      TYPE(svLS_lhsType) svLS_lhs, svLS_lhs_sc, svLS_lhsT
+      TYPE(svLS_lsType) svLS_ls, svLS_sc, svLST 
+      character*10 cname2nd
+      real*8 sumtime
+! ---------------------------------------------------------------------------
 
 !----------------------------------------------------------------------
 !       Initialize the current void fraction and constant used in
@@ -373,6 +390,7 @@ c          if (myrank .eq. master) write(*,*) 'l. 230 itrdrv.f'
          lesId   = numeqns(1)
          eqnType = 1
          nDofs   = 4
+         write(*,*) 'myrank, gnNo = ', myrank, gnNo
 c         if (myrank .eq. master) write(*,*) 'l. 247 itrdrv.f'
          call myfLesNew( lesId,   41994,
      &                 eqnType,
