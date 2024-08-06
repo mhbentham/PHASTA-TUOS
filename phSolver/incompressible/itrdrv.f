@@ -156,7 +156,7 @@ c!....Matt Talley's Bubble Coal Control
       integer, allocatable :: ltg(:), gNodes(:), gNodesT(:)
       real*8, allocatable :: sV(:,:), svT(:,:)
       
-      character*128 filename
+      character*128 fileName
       TYPE(svLS_commuType) communicator
       TYPE(svLS_lhsType) svLS_lhs, svLS_lhs_sc, svLS_lhsT
       TYPE(svLS_lsType) svLS_ls, svLS_sc, svLST 
@@ -234,8 +234,48 @@ c!....Matt Talley's Bubble Coal Control
         rAllR = zero
         rCommu = zero
 !MR CHANGE END
+!--------------------------------------------------------------------------------------
+! MB block -- block added to initialise the svLS solver
+      IF (svLFlag .EQ. 1) THEN
+         call svLS_LS_CREATE(svLS_ls, LS_TYPE_GMRES, dimKry=Kspace,
+     2   relTol=epstol(8), relTolIn=(/epstol(1), epstol(7)/),
+     3   maxItr=nPrjs, maxItrIn=(/nGMRES, maxIters/))
+      
+         nsolt = mod(impl(1), 2)
+         nsclrsol=nsolt+nsclr
 
+         if (nsclrsol.gt.0) then
+            call svLS_LS_CREATE(svLS_ls, LS_TYPE_GMRES, dimKry=Kspace,
+     2      relTol=epstol(8), relTolIn=(/epstol(1), epstol(7)/),
+     3      maxItr=nPrjs, maxItrIn=(/nGMRES, maxIters/))
+         end if
+
+         if (numpe.gt.1) then
+            write(fileName,*) myrank+1
+            fileName = "ltg.dat." //ADJUSTL(TRIM(fileName))
+            if (numpe.gt.idirtrigger) then
+               fileName = trim(cname2nd(int(myrank/dirstep)*idirstep))
+     1         //"-set/"//trim(fileName)
+            end if
+            open(1, FILE=fileName)
+            read(1,*) gnNo
+            read(1,*) nNo
+            allocate(ltg(nNo))
+            read(1,*) ltg
+            close(1)
+         else
+            gnNo = nshg
+            nNo = nshg
+            allocate(ltg(nNo))
+            do i=1, nNo
+               ltg(i) = i1
+            end do
+         end if
+      ELSE 
+!--------------------------------------------------------------------------------------
         call SolverLicenseServer(servername)
+
+      END IF   ! MB
 c
 c only master should be verbose
 c
