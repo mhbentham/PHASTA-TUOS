@@ -163,7 +163,7 @@ c!....Matt Talley's Bubble Coal Control
       character*10 cname2nd
       real*8 sumtime
 ! ---------------------------------------------------------------------------
-
+         if (myrank.eq.master) write(*,*) "starting the itrdrv subroutine..."
 !----------------------------------------------------------------------
 !       Initialize the current void fraction and constant used in
 !       interface adjustment
@@ -236,21 +236,28 @@ c!....Matt Talley's Bubble Coal Control
 !MR CHANGE END
 !--------------------------------------------------------------------------------------
 ! MB block -- block added to initialise the svLS solver
-      IF (svLFlag .EQ. 1) THEN
-         call svLS_LS_CREATE(svLS_ls, LS_TYPE_GMRES, dimKry=Kspace,
+      if(myrank.eq.master) write(*,*) "svLSFlag is set to ", svLSFlag
+      IF (svLSFlag.EQ. 1) THEN
+        if(myrank.eq.master) write(*,*) "calling svLS_LS_CREATE"
+        call svLS_LS_CREATE(svLS_ls, LS_TYPE_GMRES, dimKry=Kspace,
      2   relTol=epstol(8), relTolIn=(/epstol(1), epstol(7)/),
      3   maxItr=nPrjs, maxItrIn=(/nGMRES, maxIters/))
-      
+         if(myrank.eq.master) write(*,*) "called svLS_LS_CREATE"
+
          nsolt = mod(impl(1), 2)
          nsclrsol=nsolt+nsclr
 
          if (nsclrsol.gt.0) then
+            if(myrank.eq.master) write(*,*) "calling svLS_LS_CREATE"
             call svLS_LS_CREATE(svLS_ls, LS_TYPE_GMRES, dimKry=Kspace,
      2      relTol=epstol(8), relTolIn=(/epstol(1), epstol(7)/),
      3      maxItr=nPrjs, maxItrIn=(/nGMRES, maxIters/))
+            if(myrank.eq.master) write(*,*) "called svLS_LS_CREATE"
          end if
 
+         
          if (numpe.gt.1) then
+            if (myrank.eq.master) write(*,*) "starting to write the ltg files"
             write(fileName,*) myrank+1
             fileName = "ltg.dat." //ADJUSTL(TRIM(fileName))
             if (numpe.gt.idirtrigger) then
@@ -263,6 +270,7 @@ c!....Matt Talley's Bubble Coal Control
             allocate(ltg(nNo))
             read(1,*) ltg
             close(1)
+            if (myrank.eq.master) write(*,*)"finished writing and reading the ltg files"
          else
             gnNo = nshg
             nNo = nshg
