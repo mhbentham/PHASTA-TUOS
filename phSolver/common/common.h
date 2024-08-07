@@ -163,8 +163,8 @@ c
      &                  EntropyPressure
 
 c
-c /*MB, adding the integer type below means svLS flag will be set to a 1 exactly
- if it is declared */
+c MB, adding the integer type below means svLS flag will be set to a 1 exactly
+c if it is declared
         integer :: svLSFlag
         common /inpdat/ epstol(8),  Delt(MAXTS),    CFLfl(MAXTS),
      &                  CFLsl(MAXTS),   nstep(MAXTS),   niter(MAXTS),

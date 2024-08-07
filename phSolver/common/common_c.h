@@ -341,7 +341,7 @@ extern "C" {
   extern struct { 
     double E3nsd;
     int I3nsd;
-    int nsymdf;:
+    int nsymdf;
     int ndofBC;
     int ndiBCB;
     int ndBCB;
