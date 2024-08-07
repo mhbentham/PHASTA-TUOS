@@ -513,8 +513,10 @@ c
       fname1 = trim(fname1)
 
       intfromfile=0
+      if(myrank.eq.master) write(*,*) "calling readheader"
       call readheader(descriptor,fname1 // char(0) ,intfromfile,
      & ithree,'integer' // char(0),iotype)
+      if (mrank.eq.master) write(*,*) "called readheader"
 c
 c.... read the values of primitive variables into q
 c
@@ -533,8 +535,10 @@ c
      &        call error ('restar  ', 'nshg   ', nshg)
          allocate( qread(nshg,ndof2) )
          iqsiz=nshg*ndof2
+         if (myrank.eq.master) write(*,*) 'calling readdatablock'
          call readdatablock(descriptor,fname1 // char(0),qread,iqsiz,
      &                         'double' // char(0),iotype)
+        if (myrank.eq.master) write(*,*) 'called readdatablock'
          qold(:,1:ndof)=qread(:,1:ndof)
          deallocate(qread)
       else
