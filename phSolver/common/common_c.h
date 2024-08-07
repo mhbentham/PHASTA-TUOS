@@ -341,7 +341,7 @@ extern "C" {
   extern struct { 
     double E3nsd;
     int I3nsd;
-    int nsymdf;
+    int nsymdf;:
     int ndofBC;
     int ndiBCB;
     int ndBCB;
@@ -392,7 +392,7 @@ extern "C" {
     double timestart; 
     double CFLls_max;
     int iCFLls_maxelem;
-    int svLSFlag; //MAGNUS, addes the svLSFlag
+    int svLSFlag; //MAGNUS, added the svLSFlag
   } inpdat ;
 
   extern struct { 
