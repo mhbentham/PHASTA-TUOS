@@ -175,7 +175,7 @@ c           if (myrank .eq. master) write(*,*) 'ElmGMR is done'
 ! this will likely lead to mistakes if unedited with syncIO format of
 ! the current code -- MB, 01 Aug 2024
 
-      IF (svLSFLAG.eq.1) THEN
+      IF (svLSFlag.eq.1) THEN
 
       incL = 1
       dof = 4
