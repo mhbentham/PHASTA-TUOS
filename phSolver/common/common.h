@@ -163,13 +163,16 @@ c
      &                  EntropyPressure
 
 c
+c /*MB, adding the integer type below means svLS flag will be set to a 1 exactly
+ if it is declared */
+        integer :: svLSFlag
         common /inpdat/ epstol(8),  Delt(MAXTS),    CFLfl(MAXTS),
      &                  CFLsl(MAXTS),   nstep(MAXTS),   niter(MAXTS),
      &                  impl(MAXTS),    rhoinf(MAXTS),
      &                  LHSupd(6),  loctim(MAXTS),  deltol(MAXTS,2),
      &                  CFLfl_max, iCFLfl_maxelem, iflag_cfl_dt,
      &                  CFLfl_limit, timestart, CFLls_max, 
-     &                  iCFLls_maxelem, memLSFlag
+     &                  iCFLls_maxelem, svLSFlag
 c MB, changed epstol(6) to epstol(8) in above inpdat
         common /intdat/ intg(2,MAXTS),  intpt(3),       intptb(3)
 c
