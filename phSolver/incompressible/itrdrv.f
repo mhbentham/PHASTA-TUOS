@@ -283,6 +283,7 @@ c!....Matt Talley's Bubble Coal Control
 !         end if
       ELSE 
 !--------------------------------------------------------------------------------------
+        if (myrank.eq.master) write(*,*) "svLSFlag is 0, so Acusim solver is used"
         call SolverLicenseServer(servername)
 
       END IF   ! MB
@@ -440,9 +441,50 @@ c          if (myrank .eq. master) write(*,*) 'l. 230 itrdrv.f'
          lesId   = numeqns(1)
          eqnType = 1
          nDofs   = 4
-         write(*,*) 'myrank, gnNo = ', myrank, gnNo
-c         if (myrank .eq. master) write(*,*) 'l. 247 itrdrv.f'
-         call myfLesNew( lesId,   41994,
+!#########################################################################
+! MB in this section we will initialse the linear solver parameters required for svLS
+         ! method
+
+         IF (svLSFlag .EQ. 1) THEN
+            svLS_nFaces = 1
+            write(*,*) 'myrank, gnNo =', myrank, gnNo
+            if (myrank .eq. master) write(*,*) 'calling svLS_LHS_CREATE'
+            call svLS_LHS_CREATE(svLS_lhs, communicator, gnNo, nNo,
+     2         nnz_tot, ltg, colm, rowp, svLS_nFaces)
+            if (myrank .eq. master) write(*,*) 'called svLS_LHS_CREATE'       
+
+            faIn = 1
+            facenNo = 0
+
+            DO i=1, nshg
+               IF (IBITS(iBC(i),3,3) .NE. 0) facenNo = facenNo + 1
+            END DO
+
+            allocate(gNodes(facenNo), sV(nsd, facenNo))
+            sV = 0D0
+            j = 0
+
+            DO i=1, nshg
+               IF (IBITS(iBC(i),3,3) .NE. 0) THEN
+                  j = j + 1
+                  gNodes(j) = i
+                  IF (.NOT.BTEST(iBC(i),3)) sV(1,j) = 1D0
+                  IF (.NOT.BTEST(iBC(i),4)) sV(2,j) = 1D0
+                  IF (.NOT.BTEST(iBC(i),5)) sV(3,j) = 1D0
+               END IF
+            END DO
+            
+            if (myrank.eq.master) write(*,*) 'calling svLS_BC_CREATE'
+            call svLS_BC_CREATE(svLS_lhs, faIn, facenNo,
+     2         nsd, BC_TYPE_Dir, gNodes, sV)
+            if (myrank.eq.master) write(*,*) 'called svLS_BC_CREATE'
+
+         ELSE  ! if svLS not available
+
+!#########################################################################
+            write(*,*) 'myrank, gnNo = ', myrank, gnNo
+            if (myrank .eq. master) write(*,*) 'calling myfLesNew'
+            call myfLesNew( lesId,   41994,
      &                 eqnType,
      &                 nDofs,          minIters,       maxIters,
      &                 nKvecs,         prjFlag,        nPrjs,
@@ -450,16 +492,21 @@ c         if (myrank .eq. master) write(*,*) 'l. 247 itrdrv.f'
      &                 prestol,        verbose,        statsflow,
      &                 nPermDims,      nTmpDims,      servername  )
 
-c          if (myrank .eq. master) write(*,*) 'l. 256 itrdrv.f'
+            if (myrank .eq. master) write(*,*) 'called myfLesNew'
 
-         allocate (aperm(nshg,nPermDims))
-         allocate (atemp(nshg,nTmpDims))
+            allocate (aperm(nshg,nPermDims))
+            allocate (atemp(nshg,nTmpDims))
+         
+         END IF      ! end of leslib vs svLS coondition 
+
          allocate (lhsP(4,nnz_tot))
          allocate (lhsK(9,nnz_tot))
 
+         if (myrank .eq. master) write(*,*) 'calling readLesRestart'
+         
          call readLesRestart( lesId,  aperm, nshg, myrank, lstep,
      &                        nPermDims )
-
+         if (myrank .eq. master) write(*,*) 'called readLesRestart'
       else
          nPermDims = 0
          nTempDims = 0
