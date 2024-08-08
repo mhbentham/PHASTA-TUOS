@@ -255,30 +255,32 @@ c!....Matt Talley's Bubble Coal Control
             if(myrank.eq.master) write(*,*) "called svLS_LS_CREATE"
          end if
 
-         
-         if (numpe.gt.1) then
-            if (myrank.eq.master) write(*,*) "starting to write the ltg files"
-            write(fileName,*) myrank+1
-            fileName = "ltg.dat." //ADJUSTL(TRIM(fileName))
-            if (numpe.gt.idirtrigger) then
-               fileName = trim(cname2nd(int(myrank/dirstep)*idirstep))
-     1         //"-set/"//trim(fileName)
-            end if
-            open(1, FILE=fileName)
-            read(1,*) gnNo
-            read(1,*) nNo
-            allocate(ltg(nNo))
-            read(1,*) ltg
-            close(1)
-            if (myrank.eq.master) write(*,*)"finished writing and reading the ltg files"
-         else
+! Assuming the protocal to read the ltg files and set gnNo, nNO and ltg is not required
+! we can simply comment all of this section out. This is what we are currently trying
+
+!         if (numpe.gt.1) then
+!            if (myrank.eq.master) write(*,*) "starting to write the ltg files"
+!            write(fileName,*) myrank+1
+!            fileName = "ltg.dat." //ADJUSTL(TRIM(fileName))
+!            if (numpe.gt.idirtrigger) then
+!               fileName = trim(cname2nd(int(myrank/dirstep)*idirstep))
+!     1         //"-set/"//trim(fileName)
+!            end if
+!            open(1, FILE=fileName)
+!            read(1,*) gnNo
+!            read(1,*) nNo
+!            allocate(ltg(nNo))
+!            read(1,*) ltg
+!            close(1)
+!            if (myrank.eq.master) write(*,*)"finished writing and reading the ltg files"
+!         else
             gnNo = nshg
             nNo = nshg
             allocate(ltg(nNo))
             do i=1, nNo
                ltg(i) = i1
             end do
-         end if
+!         end if
       ELSE 
 !--------------------------------------------------------------------------------------
         call SolverLicenseServer(servername)
