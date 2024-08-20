@@ -255,6 +255,8 @@ c!....Matt Talley's Bubble Coal Control
             if(myrank.eq.master) write(*,*) "called svLS_LS_CREATE"
          end if
 
+         call svLS_COMMU_CREATE(communicator, MPI_COMM_WORLD)  ! MB, added to prevent MPI_ALLREDUCE problem
+
 ! Assuming the protocal to read the ltg files and set gnNo, nNO and ltg is not required
 ! we can simply comment all of this section out. This is what we are currently trying
 
