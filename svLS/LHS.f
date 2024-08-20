@@ -100,12 +100,12 @@
          RETURN
       END IF
       ! MB following is added for troubleshooting ------------------------------------------
-      write(*,*) 'calling MPI_ALLREDUCE in svLS_LHS_CREATE subroutine'
+      !write(*,*) 'calling MPI_ALLREDUCE in svLS_LHS_CREATE subroutine'
       ! MB ---------------------------------------------------------------------------------
       CALL MPI_ALLREDUCE (nNo, maxnNo, 1, mpint, MPI_MAX, comm, ierr)
       
       ! MB following is added for troubleshooting ------------------------------------------
-      write(*,*) 'called MPI_ALLREDUCE in svLS_LHS_CREATE subroutine'
+      !write(*,*) 'called MPI_ALLREDUCE in svLS_LHS_CREATE subroutine'
       ! MB ---------------------------------------------------------------------------------
       
       ALLOCATE(aNodes(maxnNo,nTasks), part(maxnNo), sCount(nTasks), 
@@ -121,20 +121,27 @@
 
       CALL MPI_ALLGATHERV(part, maxnNo, mpint, aNodes, sCount, disp,
      2   mpint, comm, ierr)
-      
+      !write(*,*) 'called MPI_ALLGATHERV in svLS_LHS_CREATE subroutine'  !MB
       gtlPtr = 0
+      write (*,*) 'about to assign gtlPtr' !MB
       DO a=1, nNo
          Ac = gNodes(a)
+         !write(*,*) 'gnodes is ', gNodes  !MB
+         !write(*,*) 'Ac is ', Ac !MB
+         !write(*,*) 'a is ', a !MB
          gtlPtr(Ac) = a
       END DO
-      
+      write(*,*) 'gtlPtr is assigned' !MB
+
       DO i=nTasks, 1, -1
          IF (i .EQ. tF) CYCLE
-
+         write(*,*) 'maxnNo is ', maxnNo
          DO a=1, maxnNo
             Ac = aNodes(a,i)
             IF (Ac .EQ. 0) EXIT
+            !write(*,*) 'about to assign ai based on gtlPtr' ! MB
             ai = gtlPtr(Ac)
+            !write(*,*) 'successfully assigned ai based on gtlPtr'   !MB
             IF (ai .NE. 0) THEN
                IF (aNodes(ai,tF) .NE. 0) THEN
                   IF (i .GT. tF) aNodes(ai,tF) = 0
