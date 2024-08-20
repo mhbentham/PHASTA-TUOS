@@ -99,8 +99,14 @@
          lhs%mynNo = nNo
          RETURN
       END IF
-
+      ! MB following is added for troubleshooting ------------------------------------------
+      write(*,*) 'calling MPI_ALLREDUCE in svLS_LHS_CREATE subroutine'
+      ! MB ---------------------------------------------------------------------------------
       CALL MPI_ALLREDUCE (nNo, maxnNo, 1, mpint, MPI_MAX, comm, ierr)
+      
+      ! MB following is added for troubleshooting ------------------------------------------
+      write(*,*) 'called MPI_ALLREDUCE in svLS_LHS_CREATE subroutine'
+      ! MB ---------------------------------------------------------------------------------
       
       ALLOCATE(aNodes(maxnNo,nTasks), part(maxnNo), sCount(nTasks), 
      2   disp(nTasks), gtlPtr(gnNo), ltg(nNo))
