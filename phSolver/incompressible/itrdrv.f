@@ -280,7 +280,7 @@ c!....Matt Talley's Bubble Coal Control
             nNo = nshg
             allocate(ltg(nNo))
             do i=1, nNo
-               ltg(i) = i1
+               ltg(i) = i
             end do
 !         end if
       ELSE 
@@ -450,6 +450,9 @@ c          if (myrank .eq. master) write(*,*) 'l. 230 itrdrv.f'
          IF (svLSFlag .EQ. 1) THEN
             svLS_nFaces = 1
             write(*,*) 'myrank, gnNo =', myrank, gnNo
+            if (myrank.eq.master) write(*,*) 'calling svLS_BC_CREATE'
+            !if (myrank.eq.master) write(*,*) 'gNodes is ', gNodes
+            if (myrank.eq.master) write(*,*) 'nNo is ', nNo
             if (myrank .eq. master) write(*,*) 'calling svLS_LHS_CREATE'
             call svLS_LHS_CREATE(svLS_lhs, communicator, gnNo, nNo,
      2         nnz_tot, ltg, colm, rowp, svLS_nFaces)
@@ -476,7 +479,7 @@ c          if (myrank .eq. master) write(*,*) 'l. 230 itrdrv.f'
                END IF
             END DO
             
-            if (myrank.eq.master) write(*,*) 'calling svLS_BC_CREATE'
+
             call svLS_BC_CREATE(svLS_lhs, faIn, facenNo,
      2         nsd, BC_TYPE_Dir, gNodes, sV)
             if (myrank.eq.master) write(*,*) 'called svLS_BC_CREATE'
