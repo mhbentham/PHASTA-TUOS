@@ -232,6 +232,8 @@ extern "C" {
     int nflow;
     int nnz_tot;
     int idtn;
+    int ncorpsize;    // MB
+    int iownnodes;    // MB
   } conpar ;
   
   extern struct { 

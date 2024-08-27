@@ -19,6 +19,9 @@ c
       integer, allocatable :: iBCtmp(:)
       real*8, allocatable :: BCinp(:,:)
 
+      !integer*8, allocatable :: fncorp(:) !MB
+      !integer, allocatable :: ltg(:)  !MB
+
       integer, allocatable :: point2ilwork(:)
       integer, allocatable :: nBC(:)
       integer, allocatable :: point2iper(:)
@@ -39,6 +42,8 @@ c
       real*8, allocatable :: BCinpread(:,:)
       integer, allocatable :: iperread(:), iBCtmpread(:)
       integer, allocatable :: ilworkread(:), nBCread(:)
+      !integer, target, allocatable :: fncorpread(:)   ! MB
+      !integer fncorpsize  ! MB
       character*10 cname2
       character*8 mach2
       character*30 fmt1
@@ -180,7 +185,9 @@ c
          nflow = nsd + 2
       endif 
       ndof   = nsd + 2
+      write(*,*) 'nsd is ', nsd
       nsclr=impl(1)/100
+      write(*,*) 'nsclr is ', nsclr
       ndof=ndof+nsclr           ! number of sclr transport equations to solve
       
       ndofBC = ndof + I3nsd     ! dimension of BC array
@@ -211,6 +218,38 @@ c
 
          point2ilwork = ilworkread
          call ctypes (point2ilwork)
+! ######################################################################
+        ! MB here goes the code to aptly assign the ltg arrays...
+!         if(svLSFlag.eq.1) then
+!            fncorpsize = nshg
+!            allocate(fncorp(fncorpsize))
+!            call gen_ncorp(fncorp, ilworkread, nlwork, fncorpsize)
+   !
+   ! the  following code finds the global range of the owned nodes
+   !
+!            maxowned=0
+!            minowned=maxval(fncorp)
+!            do i = 1,nshg      
+!               if(fncorp(i).gt.0) then  ! don't consider remote copies
+!                  maxowned=max(maxowned,fncorp(i))
+!                  minowned=min(minowned,fncorp(i))
+!               endif
+!            enddo
+   !
+   !  end of global range code
+   !
+!            call commuInt(fncorp, point2ilwork, 1, 'out')
+!            ncorpsize = fncorpsize 
+!          endif
+!          write(*,*) 'svLSFlag is ', svLSFlag
+!          if(svLSFlag.eq.1) then
+!           allocate(ltg(ncorpsize))
+!            write(*,*) 'norpsize is ', ncorpsize
+!            ltg(:)=fncorp(:)
+!            write(*,*) 'ltg(:) is ', ltg
+!          endif
+! ######################################################################
+
       else
          nlwork = 1
          allocate( point2ilwork(nlwork) )

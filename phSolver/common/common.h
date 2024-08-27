@@ -113,6 +113,7 @@ c
      &                  numflx, ndof,   iALE,   icoord, navier, iblk,
      &                  irs,    iexec,  necho,  ichem,  iRK,    nedof,
      &                  nshg,   nnz,    istop,  nflow,  nnz_tot, idtn
+     &                  ncorpsize, iownnodes    // MB, added for fncorp branch
 
 c
          integer coalcon, update_coalcon, coaltimtrak, coalest,
