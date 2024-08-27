@@ -260,29 +260,37 @@ c!....Matt Talley's Bubble Coal Control
 ! Assuming the protocal to read the ltg files and set gnNo, nNO and ltg is not required
 ! we can simply comment all of this section out. This is what we are currently trying
 
-!         if (numpe.gt.1) then
-!            if (myrank.eq.master) write(*,*) "starting to write the ltg files"
-!            write(fileName,*) myrank+1
-!            fileName = "ltg.dat." //ADJUSTL(TRIM(fileName))
-!            if (numpe.gt.idirtrigger) then
-!               fileName = trim(cname2nd(int(myrank/dirstep)*idirstep))
-!     1         //"-set/"//trim(fileName)
-!            end if
-!            open(1, FILE=fileName)
-!            read(1,*) gnNo
-!            read(1,*) nNo
-!            allocate(ltg(nNo))
-!            read(1,*) ltg
-!            close(1)
-!            if (myrank.eq.master) write(*,*)"finished writing and reading the ltg files"
-!         else
+         if (numpe.gt.1) then
+            if (myrank.eq.master) write(*,*) "starting to write the ltg files"
+            write(fileName,*) myrank+1
+            fileName = "ltg.dat." //ADJUSTL(TRIM(fileName))
+            if (numpe.gt.idirtrigger) then
+               fileName = trim(cname2nd(int(myrank/dirstep)*idirstep))
+     1         //"-set/"//trim(fileName)
+            end if
+            open(1, FILE=fileName)
+            read(1,*) gnNo
+            read(1,*) nNo
+            allocate(ltg(nNo))
+            read(1,*) ltg
+            close(1)
+            if (myrank.eq.master) write(*,*)"finished writing and reading the ltg files"
+         else
+! MB, I think this part of the code causes the problem with the bounds in svLS_LHS_CREATE
+            ! memLS syntax
             gnNo = nshg
             nNo = nshg
             allocate(ltg(nNo))
             do i=1, nNo
                ltg(i) = i
             end do
-!         end if
+         end if
+            ! COLORADO SYNTAX
+!            nNo = nshg
+!            gnNo = nshgt
+            
+
+
       ELSE 
 !--------------------------------------------------------------------------------------
         if (myrank.eq.master) write(*,*) "svLSFlag is 0, so Acusim solver is used"
@@ -358,7 +366,7 @@ c
            open (unit=ihist,  file=fhist, status='unknown')
            open (unit=iforce, file=fforce, status='unknown')
            open (unit=76, file="fort.76", status='unknown')
-c          write(*,*) ' l. 192; iLSet = ', iLSet
+          write(*,*) ' l. 192; iLSet = ', iLSet
            if (iLSet .eq. 2) then
              open (unit=ivhist,  file=fvhist, status='unknown')
            endif
@@ -450,13 +458,14 @@ c          if (myrank .eq. master) write(*,*) 'l. 230 itrdrv.f'
          IF (svLSFlag .EQ. 1) THEN
             svLS_nFaces = 1
             write(*,*) 'myrank, gnNo =', myrank, gnNo
-            if (myrank.eq.master) write(*,*) 'calling svLS_BC_CREATE'
+            !if (myrank.eq.master) write(*,*) 'calling svLS_BC_CREATE'
             !if (myrank.eq.master) write(*,*) 'gNodes is ', gNodes
-            if (myrank.eq.master) write(*,*) 'nNo is ', nNo
-            if (myrank .eq. master) write(*,*) 'calling svLS_LHS_CREATE'
+            
+            !if (myrank.eq.master) write(*,*) 'nNo is ', nNo
+            !if (myrank .eq. master) write(*,*) 'calling svLS_LHS_CREATE'
             call svLS_LHS_CREATE(svLS_lhs, communicator, gnNo, nNo,
      2         nnz_tot, ltg, colm, rowp, svLS_nFaces)
-            if (myrank .eq. master) write(*,*) 'called svLS_LHS_CREATE'       
+            !if (myrank .eq. master) write(*,*) 'called svLS_LHS_CREATE'       
 
             faIn = 1
             facenNo = 0
@@ -502,7 +511,7 @@ c          if (myrank .eq. master) write(*,*) 'l. 230 itrdrv.f'
             allocate (aperm(nshg,nPermDims))
             allocate (atemp(nshg,nTmpDims))
          
-         END IF      ! end of leslib vs svLS coondition 
+         END IF      ! end of leslib vs svLS coondition ! MB
 
          allocate (lhsP(4,nnz_tot))
          allocate (lhsK(9,nnz_tot))
@@ -518,8 +527,58 @@ c          if (myrank .eq. master) write(*,*) 'l. 230 itrdrv.f'
       endif
 
 c          if (myrank .eq. master) write(*,*) 'l. 262 itrdrv.f'
+!########################################################################
+      if (myrank.eq.master) write(*,*) 'beginning solving for scalars block'
+      if (nsclrsol.gt.0) then    ! solving for scalars
+         IF (svLSFlag .EQ. 1) THEN
+            ! Possible add separate memLS_lhs definition for each scalar ? Important for
+            ! b.c.s
+            
+         if (nsolt.gt.0) then
+               if (myrank.eq.master)
+     &                  write(*,*) 'Setting BC for temperature'
 
-      if(nsclrsol.gt.0) then
+         svLS_nFacesT = 1
+
+         CALL svLS_LHS_CREATE(svLS_lhsT, communicator, gnNo, nNo,
+     2         nnz_tot, ltg, colm, rowp, svLS_nFacesT)
+
+         faInT = 1
+         facenNoT = 0
+         DO i=1, nshg
+            IF (btest(iBC(i),1))  facenNoT = facenNoT + 1  ! Temperature check
+         END DO
+         ALLOCATE(gNodesT(facenNoT), sVT(1,facenNoT))
+         sVT = 0D0
+         j = 0
+         DO i=1, nshg
+            IF (btest(iBC(i),1)) THEN
+               j = j + 1
+               gNodesT(j) = i
+               IF (.NOT.BTEST(iBC(i),1)) sV(1,j) = 1D0
+            END IF
+         END DO
+         CALL svLS_BC_CREATE(svLS_lhsT, faInT, facenNoT,
+     2         1, BC_TYPE_Dir, gNodesT, sVT)
+
+      end if
+
+      if (iLSet.gt.0) then
+         svLS_nFaces_sc = 0
+
+      CALL svLS_LHS_CREATE(svLS_lhs_sc, communicator, gnNo, nNo,
+     2         nnz_tot, ltg, colm, rowp, svLS_nFaces_sc)
+
+      if (myrank.eq.master) 
+     &  write(*,*) 'Setting no-BC for level set and ls distance'
+
+      end if
+
+         ELSE     ! acusim
+
+!########################################################################
+
+      !if(nsclrsol.gt.0) then
        do isolsc=1,nsclrsol
          lesId       = numeqns(isolsc+1)
          eqnType     = 2
@@ -544,10 +603,14 @@ c          if (myrank .eq. master) write(*,*) 'l. 285 itrdrv.f'
 
        allocate (apermS(nshg,nPermDimsS,nsclrsol))
        allocate (atempS(nshg,nTmpDimsS))  !they can all share this
-       allocate (lhsS(nnz_tot,nsclrsol))
+
+      END IF !end solver choice
+      
+      allocate (lhsS(nnz_tot,nsclrsol))
 c
 c actually they could even share with atemp but leave that for later
 c
+ 
       else
          nPermDimsS = 0
          nTmpDimsS  = 0
@@ -921,7 +984,8 @@ c             if (myrank .eq. master) write(*,*) 'SolFlow is about to be called'
                      avgycoordf(:) = -1.0d3
                      avgzcoordf(:) = -1.0d3
 
-
+      if (myrank.eq.master) write(*,*) 'ndof=',ndof
+      if (myrank.eq.master) write(*,*) 'ndof2=',ndof2
                      call SolFlow(y,          ac,        u,
      &                         banma,
      &                         yold,          acold,     uold,
@@ -934,7 +998,8 @@ c             if (myrank .eq. master) write(*,*) 'SolFlow is about to be called'
      &                         colm,          lhsK,      lhsP,
      &                         solinc,        rerr,      tcorecp,
      &                         GradV,         elemvol_global,
-     &                         avgxcoordf, avgycoordf, avgzcoordf)
+     &                         avgxcoordf, avgycoordf, avgzcoordf,
+     &                         svLS_lhs, svLS_ls, svLS_nFaces)
 
 
 c!....Matt Talley's Coalescence Contorl

@@ -232,6 +232,7 @@ c	if (myrank.lt.10) write(*,10) myrank, rho(1:100)
 c  10   format('rho = ', I4, 500F5.2)
 c
 c
+c     write(*,*) 'ndof = ', ndof 
       sclr_ls = zero
       do i=1,npro
          do n = 1, nshl
