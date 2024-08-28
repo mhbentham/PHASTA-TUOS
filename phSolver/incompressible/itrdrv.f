@@ -237,44 +237,49 @@ c!....Matt Talley's Bubble Coal Control
 !--------------------------------------------------------------------------------------
 ! MB block -- block added to initialise the svLS solver
       if(myrank.eq.master) write(*,*) "svLSFlag is set to ", svLSFlag
+
       IF (svLSFlag.EQ. 1) THEN
-        if(myrank.eq.master) write(*,*) "calling svLS_LS_CREATE"
+        !if(myrank.eq.master) write(*,*) "calling svLS_LS_CREATE"
+
         call svLS_LS_CREATE(svLS_ls, LS_TYPE_GMRES, dimKry=Kspace,
      2   relTol=epstol(8), relTolIn=(/epstol(1), epstol(7)/),
      3   maxItr=nPrjs, maxItrIn=(/nGMRES, maxIters/))
-         if(myrank.eq.master) write(*,*) "called svLS_LS_CREATE"
+
+         !if(myrank.eq.master) write(*,*) "called svLS_LS_CREATE"
 
          nsolt = mod(impl(1), 2)
          nsclrsol=nsolt+nsclr
 
          if (nsclrsol.gt.0) then
-            if(myrank.eq.master) write(*,*) "calling svLS_LS_CREATE"
+            !if(myrank.eq.master) write(*,*) "calling svLS_LS_CREATE"
             call svLS_LS_CREATE(svLS_ls, LS_TYPE_GMRES, dimKry=Kspace,
      2      relTol=epstol(8), relTolIn=(/epstol(1), epstol(7)/),
      3      maxItr=nPrjs, maxItrIn=(/nGMRES, maxIters/))
-            if(myrank.eq.master) write(*,*) "called svLS_LS_CREATE"
+            !if(myrank.eq.master) write(*,*) "called svLS_LS_CREATE"
          end if
 
          call svLS_COMMU_CREATE(communicator, MPI_COMM_WORLD)  ! MB, added to prevent MPI_ALLREDUCE problem
 
 ! Assuming the protocal to read the ltg files and set gnNo, nNO and ltg is not required
 ! we can simply comment all of this section out. This is what we are currently trying
-
-         if (numpe.gt.1) then
+         idirstep = 512 !tmp test
+         IF (numpe .GT. 1) THEN
             if (myrank.eq.master) write(*,*) "starting to write the ltg files"
-            write(fileName,*) myrank+1
+            WRITE(fileName,*) myrank+1
             fileName = "ltg.dat." //ADJUSTL(TRIM(fileName))
-            if (numpe.gt.idirtrigger) then
-               fileName = trim(cname2nd(int(myrank/dirstep)*idirstep))
+        if (numpe.gt.idirtrigger) then
+            fileName = trim(cname2nd(int(myrank/idirstep)*idirstep))
      1         //"-set/"//trim(fileName)
             end if
+
             open(1, FILE=fileName)
             read(1,*) gnNo
             read(1,*) nNo
             allocate(ltg(nNo))
             read(1,*) ltg
             close(1)
-            if (myrank.eq.master) write(*,*)"finished writing and reading the ltg files"
+
+            !if (myrank.eq.master) write(*,*)"finished writing and reading the ltg files"
          else
 ! MB, I think this part of the code causes the problem with the bounds in svLS_LHS_CREATE
             ! memLS syntax
@@ -1000,7 +1005,7 @@ c             if (myrank .eq. master) write(*,*) 'SolFlow is about to be called'
      &                         GradV,         elemvol_global,
      &                         avgxcoordf, avgycoordf, avgzcoordf,
      &                         svLS_lhs, svLS_ls, svLS_nFaces)
-
+      if (myrank.eq.master) write(*,*) 'Called svLS flow'
 
 c!....Matt Talley's Coalescence Contorl
                       if (coalcon.eq.1) then
@@ -1149,7 +1154,9 @@ c     Delt(1)= Deltt ! Give a pseudo time step
      &                         ilwork,        shp,       shgl,
      &                         shpb,          shglb,     rowp,     
      &                         colm,          lhsS(1,j), 
-     &                         solinc(1,isclr+5), CFLls)
+     &                         solinc(1,isclr+5), CFLls,
+     &                         svLS_lhs_sc, svLS_sc, svLS_nFaces_sc)
+                        ! MB, added svLS inputs above
                         
                                 
                      endif
@@ -1829,8 +1836,10 @@ c
             endif
 
          lesId   = numeqns(1)
+         IF (svLSflag .NE. 1) THEN ! MB, add conditional
          call saveLesRestart( lesId,  aperm , nshg, myrank, lstep,
      &                        nPermDims )
+         END IF                    ! MB, end conditional
 
 
       if(ierrcalc.eq.1) then
@@ -1959,18 +1968,56 @@ c
       if(nsolflow.eq.1) then
          deallocate (lhsK)
          deallocate (lhsP)
+      IF (svLSFlag .NE. 1) THEN     !MB, add conditional
          deallocate (aperm)
          deallocate (atemp)
+      END IF                     !MB, end conditional
       endif
       if(nsclrsol.gt.0) then
          deallocate (lhsS)
+      IF (svLSFlag .NE. 1) THEN     !MB, end conditional
          deallocate (apermS)
          deallocate (atempS)
+      ENDIF                          ! MB, end conditional
       endif
       
       if(iabc==1) deallocate(acs)
 
       return
+      ! ################################################################
+      ! MB, add the nuemann BC
+      CONTAINS
+
+      SUBROUTINE AddNeumannBCTosvLS(srfID, faIn)
+
+      INTEGER, INTENT(IN) :: srfID, faIn
+      TYPE(svLS_lhsType) svLS_lhs 
+      INTEGER facenNo, i, j
+
+      facenNo = 0
+      DO i = 1, nshg
+         IF (srfID .EQ. ndsurf(i)) THEN
+            facenNo = facenNo + 1
+         END IF
+      END DO
+      IF (ALLOCATED(gNodes)) DEALLOCATE(gNodes, sV)
+      ALLOCATE(gNodes(facenNo), sV(nsd,facenNo))
+      sV = 0D0
+      j = 0
+      DO i = 1, nshg
+         IF (srfID .EQ. ndsurf(i)) THEN
+            j = j + 1
+            gNodes(j) = i
+            sV(:,j) = NABI(i,1:3)
+         END IF
+      END DO
+!      CALL memLS_BC_CREATE(memLS_lhs, faIn, facenNo,
+!     2   nsd, BC_TYPE_Neu, gNodes, sV)
+
+      RETURN
+      END SUBROUTINE AddNeumannBCTosvLS
+
+      ! ################################################################
       end
       
       subroutine lesmodels(y,     ac,        shgl,      shp, 

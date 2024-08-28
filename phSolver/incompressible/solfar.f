@@ -148,6 +148,7 @@ c
       impistat2=1
       telmcp1 = TMRC()
 !MR CHANGE END
+      !if (myrank.eq.master) write (*,*) 'calling ElmGMR'
       call ElmGMR (uAlpha,    yAlpha,     acAlpha,
      &             x,         banma,
      &             shp,       shgl,       iBC,       
@@ -157,6 +158,7 @@ c
      &             lhsP,      rerr,       GradV,
      &             elemvol_global,
      &             avgxcoordf,  avgycoordf,  avgzcoordf)
+      !if (myrank.eq.master) write (*,*) 'called ElmGMR'
 
       telmcp2 = TMRC()
       impistat=0
@@ -180,7 +182,7 @@ c           if (myrank .eq. master) write(*,*) 'ElmGMR is done'
       incL = 1
       dof = 4
       if (.not.allocated(Res4)) then
-            allocate(Res4(dof,nshg), Val4(dof*dof, nnztot))
+            allocate(Res4(dof,nshg), Val4(dof*dof, nnz_tot))
       end if
 
       do i=1, nshg
@@ -216,6 +218,7 @@ c           if (myrank .eq. master) write(*,*) 'ElmGMR is done'
                         exit
                   end if
             end do
+            
             do k1=colm(j), colm(j+1) - 1
                   if (rowp(k1).eq.j) then
                         j1=k1
@@ -246,9 +249,9 @@ c           if (myrank .eq. master) write(*,*) 'ElmGMR is done'
       !103   FORMAT(1x, 'val4 row # ', I7, 104F12.7)
       
       end do            ! nshg loop
-      
+      !if (myrank.eq.master) write(*,*) 'calling svLS_SOLVE'
       call svLS_SOLVE(svLS_lhs, svLS_ls, dof, Res4, Val4)
-!      if(myrank.eq.master)write(*,*)'memLS_SOLVE done'
+      !if(myrank.eq.master)write(*,*)'svLS_SOLVE done'
 
       DO i=1, nshg
             solinc(i,1:dof) = Res4(1:dof,i)
