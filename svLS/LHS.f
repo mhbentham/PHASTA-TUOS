@@ -123,7 +123,7 @@
      2   mpint, comm, ierr)
       !write(*,*) 'called MPI_ALLGATHERV in svLS_LHS_CREATE subroutine'  !MB
       gtlPtr = 0
-      write (*,*) 'about to assign gtlPtr' !MB
+      !write (*,*) 'about to assign gtlPtr' !MB
       DO a=1, nNo
          Ac = gNodes(a)
          !write(*,*) 'gnodes is ', gNodes  !MB
@@ -131,11 +131,11 @@
          !write(*,*) 'a is ', a !MB
          gtlPtr(Ac) = a
       END DO
-      write(*,*) 'gtlPtr is assigned' !MB
+      !write(*,*) 'gtlPtr is assigned' !MB
 
       DO i=nTasks, 1, -1
          IF (i .EQ. tF) CYCLE
-         write(*,*) 'maxnNo is ', maxnNo
+         !write(*,*) 'maxnNo is ', maxnNo
          DO a=1, maxnNo
             Ac = aNodes(a,i)
             IF (Ac .EQ. 0) EXIT
