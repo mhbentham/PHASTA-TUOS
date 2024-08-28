@@ -1005,7 +1005,7 @@ c             if (myrank .eq. master) write(*,*) 'SolFlow is about to be called'
      &                         GradV,         elemvol_global,
      &                         avgxcoordf, avgycoordf, avgzcoordf,
      &                         svLS_lhs, svLS_ls, svLS_nFaces)
-     ! if (myrank.eq.master) write(*,*) 'Called svLS flow'
+      !if (myrank.eq.master) write(*,*) 'Called svLS flow'
 
 c!....Matt Talley's Coalescence Contorl
                       if (coalcon.eq.1) then
