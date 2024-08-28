@@ -56,7 +56,7 @@ c
 	use spat_var_eps   ! use spatially-varying epl_ls
         include "common.h"
 c
-        dimension yl(npro,nshl,ndof),          iBCB(npro,ndiBCB),
+        dimension yl(npro,nshl,ndof),          iBCB(npro,ndiBCB),     !yl allocation changed from ndof
      &            BCB(npro,nshlb,ndBCB),       shpb(nshl,ngaussb),
      &            shglb(nsd,nshl,ngaussb),           
      &            xlb(npro,nenl,nsd),          ul(npro,nshl,nsd),
