@@ -243,10 +243,11 @@ c           if (myrank .eq. master) write(*,*) 'ElmGMR is done'
                   end do
 
             end if ! end periodic node condition
-
-      !101   FORMAT(1x, 'VAL4(1,6,11,16) @', 2I7, 4F12.7)
-      !102   FORMAT(1x, 'Res4(1:4) @', I7, 4F12.7)
-      !103   FORMAT(1x, 'val4 row # ', I7, 104F12.7)
+          
+          
+ 101   FORMAT(1x, 'VAL4(1,6,11,16) @', 2I7, 4F12.7)
+ 102   FORMAT(1x, 'Res4(1:4) @', I7, 4F12.7)
+ 103   FORMAT(1x, 'val4 row # ', I7, 104F12.7)
       
       end do            ! nshg loop
       !if (myrank.eq.master) write(*,*) 'calling svLS_SOLVE'
