@@ -264,7 +264,7 @@ c!....Matt Talley's Bubble Coal Control
 ! we can simply comment all of this section out. This is what we are currently trying
          idirstep = 512 !tmp test
          idirtrigger = 10 ! tmp test
-         
+
          IF (numpe .GT. 1) THEN
             if (myrank.eq.master) write(*,*) "starting to write the ltg files"
             WRITE(fileName,*) myrank+1
@@ -448,7 +448,8 @@ c     memory space
 c
 c        call MPI_Barrier(MPI_COMM_WORLD)
 c           if (myrank .eq. master) write(*,*) 'call genadj...', icnt
-      call genadj(colm, rowp, icnt )  ! preprocess the adjacency list
+      call genadj(colm, rowp, icnt , iper)  ! preprocess the adjacency list
+      ! MB, adding iper to genadj above
 c          if (myrank .eq. master) write(*,*) 'l. 230 itrdrv.f'
 
       nnz_tot=icnt ! this is exactly the number of non-zero blocks on
@@ -1146,7 +1147,20 @@ c     Delt(1)= Deltt ! Give a pseudo time step
                      else
 !                     write(*,'(a)') 'This second big block is executed'
 !                      write(*,*)istepc
-
+                     if (icode.eq.5) then    ! temperature
+                        !                       write(*,*)istepc
+                        call SolSclr(y,          ac,        u,
+     &                         yold,          acold,     uold,
+     &                         x,             iBC,
+     &                         BC,            nPermDimsS,nTmpDimsS,  
+     &                         apermS(1,1,j), atempS,    iper,          
+     &                         ilwork,        shp,       shgl,
+     &                         shpb,          shglb,     rowp,     
+     &                         colm,          lhsS(1,j), 
+     &                         solinc(1,isclr+5), CFLls,
+     &               svLS_lhsT,     svLS_sc,  svLS_nFacesT)   ! Igor 10/2012
+     
+                     else    ! other scalar
 
 
                      call SolSclr(y,          ac,        u,
@@ -1160,7 +1174,7 @@ c     Delt(1)= Deltt ! Give a pseudo time step
      &                         solinc(1,isclr+5), CFLls,
      &                         svLS_lhs_sc, svLS_sc, svLS_nFaces_sc)
                         ! MB, added svLS inputs above
-                        
+                     end if   ! temp/scalar condition from icode
                                 
                      endif
 
