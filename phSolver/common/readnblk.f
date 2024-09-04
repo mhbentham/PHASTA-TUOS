@@ -185,9 +185,9 @@ c
          nflow = nsd + 2
       endif 
       ndof   = nsd + 2
-      write(*,*) 'nsd is ', nsd
+      !write(*,*) 'nsd is ', nsd
       nsclr=impl(1)/100
-      write(*,*) 'nsclr is ', nsclr
+      !write(*,*) 'nsclr is ', nsclr
       ndof=ndof+nsclr           ! number of sclr transport equations to solve
       
       ndofBC = ndof + I3nsd     ! dimension of BC array
