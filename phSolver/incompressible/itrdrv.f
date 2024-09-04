@@ -238,7 +238,7 @@ c!....Matt Talley's Bubble Coal Control
 ! MB block -- block added to initialise the svLS solver
       if(myrank.eq.master) write(*,*) "svLSFlag is set to ", svLSFlag
 
-      IF (svLSFlag.EQ. 1) THEN
+      IF (svLSFlag .EQ. 1) THEN
         !if(myrank.eq.master) write(*,*) "calling svLS_LS_CREATE"
 
         call svLS_LS_CREATE(svLS_ls, LS_TYPE_GMRES, dimKry=Kspace,
@@ -263,6 +263,8 @@ c!....Matt Talley's Bubble Coal Control
 ! Assuming the protocal to read the ltg files and set gnNo, nNO and ltg is not required
 ! we can simply comment all of this section out. This is what we are currently trying
          idirstep = 512 !tmp test
+         idirtrigger = 10 ! tmp test
+         
          IF (numpe .GT. 1) THEN
             if (myrank.eq.master) write(*,*) "starting to write the ltg files"
             WRITE(fileName,*) myrank+1
@@ -521,11 +523,11 @@ c          if (myrank .eq. master) write(*,*) 'l. 230 itrdrv.f'
          allocate (lhsP(4,nnz_tot))
          allocate (lhsK(9,nnz_tot))
 
-         if (myrank .eq. master) write(*,*) 'calling readLesRestart'
+         !if (myrank .eq. master) write(*,*) 'calling readLesRestart'
          
          call readLesRestart( lesId,  aperm, nshg, myrank, lstep,
      &                        nPermDims )
-         if (myrank .eq. master) write(*,*) 'called readLesRestart'
+         !if (myrank .eq. master) write(*,*) 'called readLesRestart'
       else
          nPermDims = 0
          nTempDims = 0
@@ -534,6 +536,7 @@ c          if (myrank .eq. master) write(*,*) 'l. 230 itrdrv.f'
 c          if (myrank .eq. master) write(*,*) 'l. 262 itrdrv.f'
 !########################################################################
       if (myrank.eq.master) write(*,*) 'beginning solving for scalars block'
+      
       if (nsclrsol.gt.0) then    ! solving for scalars
          IF (svLSFlag .EQ. 1) THEN
             ! Possible add separate memLS_lhs definition for each scalar ? Important for
@@ -621,9 +624,6 @@ c
          nTmpDimsS  = 0
       endif
 
-
-
-
 c
 c...  prepare lumped mass if needed
 c
@@ -637,6 +637,7 @@ c
       else
         allocate(elemb_local_size(1))
       endif
+
       call getelsize(x,  shp,  shgl,  elem_local_size,
      &               shpb, shglb,  elemb_local_size,
      &               elemvol_global)  
@@ -1145,6 +1146,8 @@ c     Delt(1)= Deltt ! Give a pseudo time step
                      else
 !                     write(*,'(a)') 'This second big block is executed'
 !                      write(*,*)istepc
+
+
 
                      call SolSclr(y,          ac,        u,
      &                         yold,          acold,     uold,
@@ -1836,7 +1839,7 @@ c
             endif
 
          lesId   = numeqns(1)
-         IF (svLSflag .NE. 1) THEN ! MB, add conditional
+         IF (svLSFlag .NE. 1) THEN ! MB, add conditional
          call saveLesRestart( lesId,  aperm , nshg, myrank, lstep,
      &                        nPermDims )
          END IF                    ! MB, end conditional
@@ -1991,7 +1994,7 @@ c
       SUBROUTINE AddNeumannBCTosvLS(srfID, faIn)
 
       INTEGER, INTENT(IN) :: srfID, faIn
-      TYPE(svLS_lhsType) svLS_lhs 
+      TYPE(svLS_lhsType) svLS_lhs
       INTEGER facenNo, i, j
 
       facenNo = 0
