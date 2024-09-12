@@ -64,37 +64,37 @@ The environemnt loaded is paricular to intertrack and a new environemnt will be 
 code on a different HPC.
 As an example the env_intetrack.sh script contains the following:
 
-#!/bin/bash
+	#!/bin/bash
 
-# The required licenses and paths and placed here
-#--------------------------------------------------------------------------------------------------
-export LES_LICENSE_SERVER=multiphase.ne.ncsu.edu
+	# The required licenses and paths and placed here
+	#--------------------------------------------------------------------------------------------------
+	export LES_LICENSE_SERVER=multiphase.ne.ncsu.edu
 
-LD_LIBRARY_PATH="/home/ctai2/LIBLES:$LD_LIBRARY_PATH"
-export LD_LIBRARY_PATH
+	LD_LIBRARY_PATH="/home/ctai2/LIBLES:$LD_LIBRARY_PATH"
+	export LD_LIBRARY_PATH
 
-ACUSOLVE_LIB="/home/ctai2/LIBLES:$ACUSOLVE_LIB"
-export ACUSOLVE_LIB
+	ACUSOLVE_LIB="/home/ctai2/LIBLES:$ACUSOLVE_LIB"
+	export ACUSOLVE_LIB
 
-export SIM_LICENSE_FILE=/home/iabolotn/Install/simmetrix/License/NorthCarolinaSU.license
-export MESHSIM=/home/iabolotn/Install/simmetrix/latest
-export SIMMODELER_HOME=/home/iabolotn/Install/simmetrix/SimModeler-latest
+	export SIM_LICENSE_FILE=/home/iabolotn/Install/simmetrix/License/NorthCarolinaSU.license
+	export MESHSIM=/home/iabolotn/Install/simmetrix/latest
+	export SIMMODELER_HOME=/home/iabolotn/Install/simmetrix/SimModeler-latest
 
-export PATH=/home/iabolotn/Install/simmetrix/SimModeler-latest:$PATH
+	export PATH=/home/iabolotn/Install/simmetrix/SimModeler-latest:$PATH
 
-#---------------------------------------------------------------------------------------------------
+	#---------------------------------------------------------------------------------------------------
 
-# purge module
-module purge
+	# purge module
+	module purge
 
-# intel one api
-source /home/ctai2/intel/oneapi/setvars.sh
-# If the above is not included cmake wont be able to find the mpi compile options
+	# intel one api
+	source /home/ctai2/intel/oneapi/setvars.sh
+	# If the above is not included cmake wont be able to find the mpi compile options
 
-# load gnu9 for mpich
-module load gnu9
-# load mpich for mpicc mpifort mpirun
-module load mpich
+	# load gnu9 for mpich
+	module load gnu9
+	# load mpich for mpicc mpifort mpirun
+	module load mpich
 
 
 
