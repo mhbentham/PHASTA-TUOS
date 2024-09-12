@@ -31,34 +31,34 @@ Note that the code above may not work for insight as its quite old.
 
 
 If you are compiling on intertrack you can create a bash script containing the following:
-# ---------------------------------------------------------------------------------------------------
-#!/bin/bash
 
-rm -rf build/*  # forcefully remove everything in the build directory
-cd build/       # enter the build directory
+	#!/bin/bash
 
-ACUSOLVE_LIB="/home/ctai2/LIBLES:$ACUSOLVE_LIB"
-export ACUSOLVE_LIB
+	rm -rf build/*  # forcefully remove everything in the build directory
+	cd build/       # enter the build directory
 
-
-#Need to source an environment with the correct compilers. This step will
-#depend on the compilers you have available on your machine
-source /home/mhbentham/development/envs/env_intertrack.sh
+	ACUSOLVE_LIB="/home/ctai2/LIBLES:$ACUSOLVE_LIB"
+	export ACUSOLVE_LIB
 
 
-cmake \
--DCMAKE_C_COMPILER=icc \
--DCMAKE_CXX_COMPILER=icpc \
--DCMAKE_Fortran_COMPILER=ifort \
--DCMAKE_BUILD_TYPE=Release \
--DPHASTA_INCOMPRESSIBLE=ON \
--DPHASTA_COMPRESSIBLE=OFF \
--DPHASTA_BUILD_PHNSPRE=ON \
--DACUSOLVE_LIB=/home/ctai2/LIBLES/libles.a \
--DPHASTA_SOURCE_DIRECTORY=. \
-..
-make -j8
-# ---------------------------------------------------------------------------------------------------
+	#Need to source an environment with the correct compilers. This step will
+	#depend on the compilers you have available on your machine
+	source /home/mhbentham/development/envs/env_intertrack.sh
+
+
+	cmake \
+	-DCMAKE_C_COMPILER=icc \
+	-DCMAKE_CXX_COMPILER=icpc \
+	-DCMAKE_Fortran_COMPILER=ifort \
+	-DCMAKE_BUILD_TYPE=Release \
+	-DPHASTA_INCOMPRESSIBLE=ON \
+	-DPHASTA_COMPRESSIBLE=OFF \
+	-DPHASTA_BUILD_PHNSPRE=ON \
+	-DACUSOLVE_LIB=/home/ctai2/LIBLES/libles.a \
+	-DPHASTA_SOURCE_DIRECTORY=. \
+	..
+	make -j8
+
 
 The environemnt loaded is paricular to intertrack and a new environemnt will be necessary to run the
 code on a different HPC.
