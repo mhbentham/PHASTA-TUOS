@@ -110,7 +110,7 @@ c
       real*8    msum(4),mval(4),cpusec(10)
 
 ! BEGIN MB ----------------------------------------------------------------
-      integer dof, memLS_nfaces, i, j, k, lesId
+      integer dof, svLS_nfaces, i, j, k, lesId
       integer, allocatable :: incL(:)
       real*8, allocatable :: faceRes(:), Res4(:,:), Val4(:,:)
 ! END MB ------------------------------------------------------------------
@@ -172,7 +172,7 @@ c           if (myrank .eq. master) write(*,*) 'ElmGMR is done'
 ! BEGIN MB ---------------------------------------------------------
 !###################################################################
 !  Calling svLs to solve
-! The following block of code has been implemented just as the memLS
+! The following block of code has been implemented just as the svLS
 ! is implemented in the developBoiling_IB verison for the code
 ! this will likely lead to mistakes if unedited with syncIO format of
 ! the current code -- MB, 01 Aug 2024
@@ -202,7 +202,7 @@ c           if (myrank .eq. master) write(*,*) 'ElmGMR is done'
                   k =rowp(j)
                   do l=colm(k), colm(k+1) - 1
                         if (rowp(l).eq.i) then
-                              Val4(4:12:4,l) = lhsP(1:3,j)
+                              Val4(4:12:4,l) = -lhsP(1:3,j)
                               exit
                         end if
                   end do
@@ -229,7 +229,7 @@ c           if (myrank .eq. master) write(*,*) 'ElmGMR is done'
             if (i.ne.j) then        ! periodic condition on node
 
                   do k1=colm(j), colm(j+1) - 1
-                        write(*,*)'k1 = ', ks, ': rowp(k)=', rowp(k1)
+                        write(*,*)'k1 = ', k1, ': rowp(k)=', rowp(k1)
                         if (rowp(k1).eq.j) then
                               Val4(1:16, k1) = zero
                               Val4(1:16:5, k1) = one
@@ -251,6 +251,9 @@ c           if (myrank .eq. master) write(*,*) 'ElmGMR is done'
       
       end do            ! nshg loop
       !if (myrank.eq.master) write(*,*) 'calling svLS_SOLVE'
+      !if (myrank.eq.master) write(*,*) 'dof = ', dof
+      !if (myrank.eq.master) write(*,*) 'Res4 = ', Res4
+      !if (myrank.eq.master) write(*,*) 'Val4 = ', Val4
       call svLS_SOLVE(svLS_lhs, svLS_ls, dof, Res4, Val4)
       !if(myrank.eq.master)write(*,*)'svLS_SOLVE done'
 
@@ -397,7 +400,7 @@ c#endif
          call commu ( solinc, ilwork, nflow, 'out')
       endif
 
-      END IF      ! MB, memLS / lesLIB choice condition 
+      END IF      ! MB, svLS / lesLIB choice condition 
 !MR CHANGE 
       tlescp2 = TMRC()
       impistat=0
@@ -421,7 +424,8 @@ c
      &                   ilwork,     shp,        shgl, 
      &                   shpb,       shglb,      rowp,     
      &                   colm,       lhsS,       solinc,
-     &                   cfl )
+     &                   cfl,
+     &                   svLS_lhs_sc, svLS_sc, svLS_nFaces)
 c
 c----------------------------------------------------------------------
 c
@@ -455,6 +459,10 @@ c
       include "common.h"
       include "mpif.h"
       include "auxmpi.h"
+      INCLUDE "svLS.h"
+
+      TYPE(svLS_lhsType) svLS_lhs_sc
+      TYPE(svLS_lsType) svLS_sc
 c     
       real*8    y(nshg,ndof),             ac(nshg,ndof),
      &          yold(nshg,ndof),          acold(nshg,ndof),
@@ -480,6 +488,11 @@ c
      &          uAlpha(nshg,nsd),
      &          lesP(nshg,1),             lesQ(nshg,1),
      &          solinc(nshg,1),           cfl(nshg)
+
+      !REAL*8 sumtime, timekeeper
+      INTEGER dof, svLS_nFaces, i, j, k, l
+      INTEGER, ALLOCATABLE :: incL(:)
+      REAL*8, ALLOCATABLE :: faceRes(:), Res4(:,:), Val4(:,:)
       
 c     
 c.... *******************>> Element Data Formation <<******************
@@ -498,6 +511,41 @@ c
      &             res,       iper,       ilwork,   
      &             rowp,      colm,       lhsS,
      &             cfl )
+
+
+! ################################################################
+! MB, call the svLS solver
+      IF (svLSFlag .EQ. 1) THEN 
+
+            lesId   = numeqns(1+nsolt+isclr)
+      !        if (myrank.eq.master) write(*,*) 'lesID = ', lesId
+            incL = 1
+            dof = 1   ! Should be equal to 1 ? (was 4 for N.-S.)
+            IF (.NOT.ALLOCATED(Res4)) THEN
+                  ALLOCATE (Res4(dof,nshg), Val4(dof*dof,nnz_tot))
+            END IF
+
+            DO i=1, nshg
+                  Res4(1:dof,i) = res(i,1)
+            END DO
+
+            DO i=1, nnz_tot
+                  Val4(1,i)   = lhsS(i)
+            END DO
+
+      !      if (lesId.eq.2) then   ! Temperature
+      !         CALL svLS_SOLVE(svLS_lhsT, svLS_sc, dof, Res4, Val4)
+      !      else   ! Level set 
+                  CALL svLS_SOLVE(svLS_lhs_sc, svLS_sc, dof, Res4, Val4)
+      !      end if
+
+            DO i=1, nshg
+                  solinc(i,1:dof) = Res4(1:dof,i)
+            END DO
+      ELSE  ! not using svLS
+     
+
+! ################################################################
 
 c
 c.... lesSolve : main matrix solver
@@ -525,6 +573,8 @@ c
       if (numpe > 1) then
          call commu ( solinc, ilwork, 1, 'out')
       endif
+
+      END IF      ! MB, end svLS / lesLIB choice condition      
       
       nsolsc=5+isclr
       call rstaticSclr (res, y, solinc, nsolsc) ! output scalar stats
