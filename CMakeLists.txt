@@ -45,7 +45,7 @@ IF(CMAKE_Fortran_COMPILER_ID MATCHES GNU)
 ENDIF(CMAKE_Fortran_COMPILER_ID MATCHES GNU)
 
 IF(CMAKE_Fortran_COMPILER_ID MATCHES Intel)
-SET(CMAKE_Fortran_FLAGS "-W0 -132 -fixed -fpp -traceback -check bounds ${CMAKE_Fortran_FLAGS}" )
+SET(CMAKE_Fortran_FLAGS "-W0 -132 -fixed -fpp -traceback  ${CMAKE_Fortran_FLAGS}" )
 #SET(CMAKE_Fortran_FLAGS "-W0 -132 -fixed -fpp -traceback ${CMAKE_Fortran_FLAGS}" )
 if((CMAKE_BUILD_TYPE MATCHES "Release") OR
         (CMAKE_BUILD_TYPE MATCHES "RelWithDebInfo"))
