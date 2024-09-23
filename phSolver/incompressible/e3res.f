@@ -232,13 +232,18 @@ c	if (myrank.lt.10) write(*,10) myrank, rho(1:100)
 c  10   format('rho = ', I4, 500F5.2)
 c
 c
+      !write(*,*) 'ndof = ', ndof 
+      !write(*,*) 'nshl=', nshl
+      !write(*,*) 'ndof=', ndof
       sclr_ls = zero
       do i=1,npro
+      !write(*,*) 'myrank is ', myrank
          do n = 1, nshl
             sclr_ls(i) = sclr_ls(i) + shpfun(i,n) * yl(i,n,6)
 !          if(bml(i,n,1).ne.0.0d0) write(*,*)'bml',bml(i,n,1)
          enddo
       enddo
+      !if (myrank.eq.master) write(*,*) 'e3res l.246'
 
         if (bubgrow.eq.1.or.bubboil.eq.1)then
         call Bubvolgenera(dVolume, shell_num, bml,sclr_ls,elemvol_local)

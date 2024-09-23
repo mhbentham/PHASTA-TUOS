@@ -547,7 +547,9 @@ int input_fform(char inpfname[])
     }
 
     //Linear Solver parameters
-    inpdat.memLSFlag=0;    // memLS
+    //inpdat.svLSFlag=0;    // svLS
+    //inpdat.memLSFlag=0;    // memLS
+    inpdat.svLSFlag=0;    // memLS
     if( (string)inp.GetValue("Solver Type") =="ACUSIM with P Projection" ){
       incomp.iprjFlag = 0; incomp.ipresPrjFlag=1;}
     else if ( (string)inp.GetValue("Solver Type") =="ACUSIM" ){
@@ -560,8 +562,11 @@ int input_fform(char inpfname[])
       inpdat.impl[0] += 10*solflow;}
     else if( (string)inp.GetValue("Solver Type") =="GMRES EBE"){ 
       inpdat.impl[0] += 20*solflow;}
-    else if( (string)inp.GetValue("Solver Type") =="memLS"){    // memLS
-      inpdat.memLSFlag=1;}
+    else if( (string)inp.GetValue("Solver Type") =="svLS"){    // memLS
+      inpdat.svLSFlag=1;}
+    //else if( (string)inp.GetValue("Solver Type") =="memLS"){    // memLS
+    //  inpdat.memLSFlag=1;}
+    // MB, added flag options for svLS
     //GMRES sparse is assumed default and has the value of 10, MFG 20,
     // EBE 30
 
@@ -571,8 +576,8 @@ int input_fform(char inpfname[])
     solpar.Kspace = inp.GetValue("Number of Krylov Vectors per GMRES Sweep");
     inpdat.LHSupd[0] = inp.GetValue("Number of Solves per Left-hand-side Formation");
     inpdat.epstol[0] = inp.GetValue("Tolerance on Momentum Equations");
-    //inpdat.epstol[6] = inp.GetValue("Tolerance on Continuity Equations");
-    //inpdat.epstol[7] = inp.GetValue("Tolerance on memLS NS Solver");
+    inpdat.epstol[6] = inp.GetValue("Tolerance on Continuity Equations"); //MB, uncommented line
+    inpdat.epstol[7] = inp.GetValue("Tolerance on svLS NS Solver");  //MB, added svLS tolerance
     incomp.prestol = inp.GetValue("Tolerance on ACUSIM Pressure Projection"); 
     incomp.minIters = inp.GetValue("Minimum Number of Iterations per Nonlinear Iteration");
     incomp.maxIters = inp.GetValue("Maximum Number of Iterations per Nonlinear Iteration");

@@ -237,7 +237,8 @@ c
 
           tmpshp(1:nshl,:) = shp(lcsyst,1:nshl,:)
           tmpshgl(:,1:nshl,:) = shgl(lcsyst,:,1:nshl,:)
-
+        
+          !if (myrank.eq.master) write (*,*) 'calling AsIGMR'
           call AsIGMR (y,         ac,       banma,
      &                 x,         mxmudmi(iblk)%p,
      &                 tmpshp, tmpshgl, mien(iblk)%p,
@@ -247,6 +248,7 @@ c
      &                 xarray, yarray,  zarray,
      &                 bubradius,  bubradius2,
      &                 coordtag)
+        !if (myrank.eq.master) write (*,*) 'called AsIGMR'
 !----------------------------------------------------------------------
 !       collect the information from the blocks for andvanced analysis
         IF(iBT .eq. 1) then

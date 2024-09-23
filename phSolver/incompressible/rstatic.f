@@ -141,6 +141,7 @@ c
 c
 c.... approximate the number of entries
 c
+        !write(*,*) 'nshgt is ', nshgt   !MB
         totres = resnrm / abs(real(nshgt))
         totres = dsqrt(totres)
         resmax = dsqrt(resmax)
@@ -244,7 +245,6 @@ c
         call sumgat (rtmp, 1, resnrm)
 
         if (numpe == 1) nshgt=nshg ! global = this processor
-
         totres = resnrm / float(nshgt)
         totres = sqrt(totres)
 

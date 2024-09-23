@@ -45,7 +45,8 @@ IF(CMAKE_Fortran_COMPILER_ID MATCHES GNU)
 ENDIF(CMAKE_Fortran_COMPILER_ID MATCHES GNU)
 
 IF(CMAKE_Fortran_COMPILER_ID MATCHES Intel)
-SET(CMAKE_Fortran_FLAGS "-W0 -132 -fixed -fpp ${CMAKE_Fortran_FLAGS}" )
+SET(CMAKE_Fortran_FLAGS "-W0 -132 -fixed -fpp -traceback  ${CMAKE_Fortran_FLAGS}" )
+#SET(CMAKE_Fortran_FLAGS "-W0 -132 -fixed -fpp -traceback ${CMAKE_Fortran_FLAGS}" )
 if((CMAKE_BUILD_TYPE MATCHES "Release") OR
         (CMAKE_BUILD_TYPE MATCHES "RelWithDebInfo"))
         set(CMAKE_Fortran_FLAGS "-O3 -ip ${CMAKE_Fortran_FLAGS}" )
@@ -126,6 +127,24 @@ if(PHASTA_BUILD_PHSHAPE)
 	add_subdirectory(phShape)
 endif(PHASTA_BUILD_PHSHAPE)
 endif(EXISTS ${PHASTA_SOURCE_DIR}/phShape)
+
+# BEGIN MAGNUS-----------------------------------------------------------------------------
+OPTION(PHASTA_USE_LESLIB "Build the leslib linear solver" ON) # set to OFF or ON
+
+# The following block is added to inform the compiler that it should compile the
+#svLS code
+OPTION(PHASTA_USE_SVLS "Build svLS Linear Solver" ON) # set to OFF or ON
+if(PHASTA_USE_SVLS)
+	message(WARNING "\
+svLS has a non-commercial license. \n \
+by activating PHASTA_USE_SVLS in cmake \n \
+you agree to the terms outlined in \
+svLS/license.txt"
+	)
+	list(APPEND PHASTA_INCLUDES "${PHASTA_SOURCE_DIR}/svLS")
+	add_subdirectory(svLS)
+endif(PHASTA_USE_SVLS)
+# END MAGNUS----------------------------------------------------------------------------
 
 OPTION(PHASTA_BUILD_SOLVERS "Build Solvers" ON)
 if(PHASTA_BUILD_SOLVERS)

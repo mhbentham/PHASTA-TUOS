@@ -1414,7 +1414,7 @@ Partition_Problem( int  numProcs,
             ncorp[(*iter).first][(*iter).second] = x ;
     }
 
-//       Here writing data required for memLS
+//       Here writing data required for memLS   //MAY also be needed for svLS
        for( int a=0; a < numProcs ; a++ ) {
          bzero( (void*)filename, 255 );
          ofstream myfileltg;

@@ -232,6 +232,8 @@ extern "C" {
     int nflow;
     int nnz_tot;
     int idtn;
+    int ncorpsize;    // MB
+    int iownnodes;    // MB
   } conpar ;
   
   extern struct { 
@@ -372,7 +374,8 @@ extern "C" {
   } genpar ;
 
   extern struct { 
-    double epstol[6];  /* 1+ max number of scalars  (beginning of the
+    // MAGNUS, changed epstol[6] to epstol[8]
+    double epstol[8];  /* 1+ max number of scalars  (beginning of the
                           end of time sequences) */
     double Delt[MAXTS];
     double CFLfl[MAXTS];
@@ -391,7 +394,7 @@ extern "C" {
     double timestart; 
     double CFLls_max;
     int iCFLls_maxelem;
-    int memLSFlag;
+    int svLSFlag; //MAGNUS, added the svLSFlag
   } inpdat ;
 
   extern struct { 

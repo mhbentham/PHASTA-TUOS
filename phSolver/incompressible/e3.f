@@ -45,7 +45,7 @@ c
 c
         include "common.h"
 c
-        dimension yl(npro,nshl,ndof),
+        dimension yl(npro,nshl,ndof), 
      &            acl(npro,nshl,ndof),       
      &            shp(nshl,ngauss),       shgl(nsd,nshl,ngauss),
      &            xl(npro,nenl,nsd),      dwl(npro,nenl),
@@ -164,7 +164,7 @@ c
           call get_phasic_vol(yl, shpfun, WdetJ)
        endif
 
-
+       !if (myrank.eq.master) write (*,*) 'calling e3Res'
         call e3Res ( u1,        u2,         u3,
      &               uBar,      aci,        WdetJ,
      &               g1yi,      g2yi,       g3yi,
@@ -174,6 +174,7 @@ c
      &               rl,        pres,       acl,
      &               rlsli,      yl,         bml,
      &               elemvol_local)
+        !if (myrank.eq.master) write (*,*) 'called e3Res'
 c
 c.... compute the tangent matrix contribution
 c
