@@ -95,6 +95,45 @@ int input_fform(char inpfname[])
     timpar.ntseq = inp.GetValue("ntseq");
     solpar.imap = inp.GetValue("imap");
 
+//-------------------------------------------------------------------
+// Magnus, need the follow block for the bubble controller 
+    //Control Force
+    bubstudy.iClrLiq = inp.GetValue("Color local liquid");
+    bubstudy.iBK = inp.GetValue("Break up tracking");
+    bubstudy.icforz = inp.GetValue("Matts Control Force");
+    bubstudy.icforz_where = inp.GetValue("Apply to Whole Domain");
+    if (bubstudy.icforz == 1) {
+       vector<double> xcfcoeffvec;
+       vector<double> ycfcoeffvec;
+       vector<double> zcfcoeffvec;
+       xcfcoeffvec = inp.GetValue("X Control Force Coefficients");
+       ycfcoeffvec = inp.GetValue("Y Control Force Coefficients");
+       zcfcoeffvec = inp.GetValue("Z Control Force Coefficients");
+       for(i=0; i<10; i++){
+          bubstudy.xcfcoeff[i]=xcfcoeffvec[i];
+       }
+       for(i=0; i<9; i++){
+          bubstudy.ycfcoeff[i]=ycfcoeffvec[i];
+          bubstudy.zcfcoeff[i]=zcfcoeffvec[i];
+       }
+       xcfcoeffvec.erase(xcfcoeffvec.begin(),xcfcoeffvec.end());
+       ycfcoeffvec.erase(ycfcoeffvec.begin(),ycfcoeffvec.end());
+       zcfcoeffvec.erase(zcfcoeffvec.begin(),zcfcoeffvec.end()); 
+       
+       bubstudy.numts_histyavg = inp.GetValue("Y History Term Averaging Range");
+       bubstudy.shear_rate = inp.GetValue("Shear Rate");
+       bubstudy.vel_centre = inp.GetValue("Velocity at Centerline"); }
+    else {
+       for(i=0; i<10; i++){
+          bubstudy.xcfcoeff[i]=0.0;
+       }
+       for(i=0; i<9; i++){
+          bubstudy.ycfcoeff[i]=0.0;
+          bubstudy.zcfcoeff[i]=0.0;
+       }
+    }
+//------------------------------------------------------------------------------
+
     // bubble study flags
     bubstudy.iClrLiq = inp.GetValue("Local Liquid Tracking");
     bubstudy.iBK = inp.GetValue("Break-up Tracking");
