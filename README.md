@@ -12,6 +12,7 @@ For more information, start at our
 
 ### How to compile ###
 
+Regardless of the system you need to make git clone the repository, and then make an empty directory called 'build'.
 
 If you are on insight.ne.ncsu.edu, run
 
