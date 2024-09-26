@@ -135,12 +135,7 @@ OPTION(PHASTA_USE_LESLIB "Build the leslib linear solver" ON) # set to OFF or ON
 #svLS code
 OPTION(PHASTA_USE_SVLS "Build svLS Linear Solver" ON) # set to OFF or ON
 if(PHASTA_USE_SVLS)
-	message(WARNING "\
-svLS has a non-commercial license. \n \
-by activating PHASTA_USE_SVLS in cmake \n \
-you agree to the terms outlined in \
-svLS/license.txt"
-	)
+	message(WARNING "activating svLS solver")
 	list(APPEND PHASTA_INCLUDES "${PHASTA_SOURCE_DIR}/svLS")
 	add_subdirectory(svLS)
 endif(PHASTA_USE_SVLS)
