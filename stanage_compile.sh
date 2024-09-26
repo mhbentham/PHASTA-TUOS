@@ -3,14 +3,16 @@
 rm -rf build/*	# forcefully remove everything in the build directory
 cd build/	# enter the build directory
 
-#module load intel/2022.1.0
-
 module load impi/2021.7.1-intel-compilers-2022.2.1
 
+# set the location of the acusolve_lib. Note that this library shouldnt actually
+# be used as the svLS library is used instead. svLS is open source, whereas
+# acusolve is proprietry.
+
+# YOU WILL NEED TO CHANGE THE PATH BELOW
 ACUSOLVE_LIB="/users/mep23mhb/PHASTA/misc/stanage_setup/LIBLES:$ACUSOLVE_LIB"
 export ACUSOLVE_LIB
 
-#source /home/ctai2/intel/oneapi/setvars.sh
 
 #Need to source an environment with the correct compilers. This step will
 #depend on the compilers you have available on your machine
