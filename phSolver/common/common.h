@@ -124,9 +124,28 @@ c
      &                   r_int_buffer,r_int_elem_size, phvol(2),
      &                   AdjRedistVelCFL, BubRad, vf_target,
      &                   C_int_adjust, vf_now, vf_obj, vfcontrcoeff,
-     &                   C_int_cap, epsilonBT, coalbubrad, coalcon_dist,
+     &                   C_int_cap, epsilonBT, 
+     &                   xdistancesum, ydistancesum, zdistancesum,
+     &                   totalxdist, totalydist, totalzdist,
+     &                   avgxdistance, avgydistance, avgzdistance,
+     &                   avgxdistold, avgydistold, avgzdistold,
+     &                   xdistideal, ydistideal, zdistideal,
+     &                   dx_new, dy_new, dz_new, ddxvel, ddyvel, ddzvel,
+     &                   xvelsum, yvelsum, zvelsum, totalxvel, totalyvel, totalzvel,
+     &                   avgxvel, avgyvel, avgzvel, avgxvelold, avgyvelold, avgzvelold,
+     &                   velwghtsum, totalvelwght, bubvolsum,
+     &                   totbubvol, denssum, totbubdens, xcforcesum, ycforcesum,
+     &                   zcforcesum, totalxcforce, totalycforce, totalzcforce,
+     &                   totalxcforceold, totalycforceold, totalzcforceold,
+     &                   avgxcforce, avgycforce, avgzcforce, avgxcforceold,
+     &                   avgycforceold, avgzcforceold, avgxcf, avgycf, avgzcf,
+     &                   x_c_f, y_c_f, z_c_f, xforcenewtsum, yforcenewtsum,
+     &                   zforcenewtsum, totxfnewtsum, totyfnewtsum, totzfnewtsum,
+     &                   xcfnewtons, ycfnewtons, zcfnewtons, rholiq, rhogas,     
+     &                   coalbubrad, coalcon_dist,
      &                   avgxcoordold(100), avgycoordold(100),
      &                   avgzcoordold(100),
+     &                   i_res_cf, nzinBsum, ntotnzinB,
      &                   iLSet, iuse_vfcont_cap, i_num_bubbles,
      &                   ivconstraint, iSolvLSSclr1, iSolvLSSclr2,
      &                   i_redist_loop_flag, 
@@ -135,9 +154,13 @@ c
      &                   i_focusredist, i_AdjRedistVel, iBT, id2w, icoalCtrl,
      &                   icoalcon_verbo, coalcon, update_coalcon, coaltimtrak,
      &                   coalest, coalcon_rem(100)
-
-        common /bubstudy/ DomainSize(6), phi_inner, phi_outer, 
-     &                    iClrLiq, iBK, Nbubtot, Nghost
+c
+c MB, added key bubble controller inputs below
+        common /bubstudy/ DomainSize(6), phi_inner, phi_outer,    
+     &                    iClrLiq, iBK, Nbubtot, Nghost,
+     &                    xcfcoeff(10), ycfcoeff(9), zcfcoeff(9),
+     &                    shear_rate, vel_centre, y_drag_flip,
+     &                    iCForz, iCForz_where, numts_histyavg
 c 
         common /shpdat/ nshape, nshapeb, maxshb,
      &                  nshl, nshlb,nfath,  ntopsh,  nsonmax
