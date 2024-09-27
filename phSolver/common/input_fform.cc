@@ -135,8 +135,8 @@ int input_fform(char inpfname[])
 //------------------------------------------------------------------------------
 
     // bubble study flags
-    bubstudy.iClrLiq = inp.GetValue("Local Liquid Tracking");
-    bubstudy.iBK = inp.GetValue("Break-up Tracking");
+    //bubstudy.iClrLiq = inp.GetValue("Local Liquid Tracking");
+    //bubstudy.iBK = inp.GetValue("Break-up Tracking");
     bubstudy.phi_inner = inp.GetValue("Liquid Shell Inner Front Location");
     bubstudy.phi_outer = inp.GetValue("Liquid Shell Outer Front Location");
 

@@ -160,7 +160,7 @@ c MB, added key bubble controller inputs below
      &                    iClrLiq, iBK, Nbubtot, Nghost,
      &                    xcfcoeff(10), ycfcoeff(9), zcfcoeff(9),
      &                    shear_rate, vel_centre, y_drag_flip,
-     &                    iCForz, iCForz_where, numts_histyavg
+     &                    icforz, icforz_where, numts_histyavg
 c 
         common /shpdat/ nshape, nshapeb, maxshb,
      &                  nshl, nshlb,nfath,  ntopsh,  nsonmax
