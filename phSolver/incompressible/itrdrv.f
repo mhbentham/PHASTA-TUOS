@@ -28,6 +28,7 @@ c! Irene Vignon, Fall 2004. Impedance BC
 c! Jun Fang, Summer 2014. Bubble Tracking
 c!----------------------------------------------------------------------
 c
+      USE, INTRINSIC :: ISO_C_BINDING !for calling C++ routines
       use pvsQbi        !gives us splag (the spmass at the end of this run 
       use specialBC     !gives us itvn
       use timedata      !allows collection of time series
@@ -36,6 +37,7 @@ c
       use bub_track     !access to bubble information array
       use turbsa        !access to d2wal info
       use redist_freeze !access to BC arrays if freezing value of primary LS vertices
+      use cf_arrays  !Magnus, required for bubble controller
       
         include "common.h"
         include "mpif.h"
@@ -694,6 +696,31 @@ c           if (myrank .eq. master) write(*,*) 'initialization is done'
 c
 c!.... -----------------> End of initialization <-----------------
 c
+!######################################################################
+! Magnus, bubble controller initialization
+      if (myrank.eq.master) write(*,*) "iCForz is", iCForz
+      if (myrank.eq.master) write(*,*) "iCForz_where is", iCForz_where
+      if(iCForz.eq.1)then
+         allocate (xcf(nstep(1)))
+         allocate (ycf(nstep(1)))
+         allocate (zcf(nstep(1)))
+         xcf = zero
+         ycf = zero
+         zcf = zero
+
+         numoldyhistind = numts_histyavg - 1
+         if(myrank.eq.master) write(*,*) 'numoldyhistind =',
+     &                                    numoldyhistind
+         allocate (ycf_old(numoldyhistind))
+         if (myrank.eq.master) write(*,*) 'calling cfrestar...'
+         CALL      CFrestar(ycf_old_log, numoldyhistind,
+     &                      ixcf,        iycf,       izcf,
+     &                      sumxcf_o,    sumycf_o,   sumzcf_o,
+     &                      oldcf_dt,    oldcf_dtlset)
+
+      end if      !iCForz
+
+!######################################################################
 
 c!.... Initialize for Matt Talley's Coalescence Control
       if (coalcon.eq.1) then
@@ -1475,10 +1502,18 @@ c
                 primvertval(:,2) = primvert(:) * 1.0
                 call write_primvert(myrank, lstep, nshg, 2,
      &                              primvertval)
-
-
             endif
 
+!##########################################################################
+! MB, add some information on the postprocessing of the control forces
+! bubble controller     
+      if(iCForz.eq.1)then
+      CALL       CFpostprocs(istp,       numoldyhistind,
+     &                         ixcf,       iycf,         izcf,
+     &                         sumxcf_o,   sumycf_o,     sumzcf_o,
+     &                         sumycf_old, ycf_old_log)
+      endif !iCForz
+!##########################################################################
 !MR CHANGE
             if ( icomputevort == 1) then
  
@@ -1797,7 +1832,26 @@ c      close(87)
  197  format(10(2x,e14.7))
 c
 c.... ---------------------->  Post Processing  <----------------------
+!######################################################################
+! Magnus, steps required for bubble controller
+      if(iCForz.eq.1)then
+         if(myrank.eq.master)then
+            write(*,*)'Closing lift force files' !for matt CF algorithm
+            close(741)
+            close(742)
+            close(743)
+            close(744)
+            close(745)
+            close(746)
+            close(747)
+            close(748)
+         end if
+      deallocate(xcf)
+      deallocate(ycf)
+      deallocate(zcf)
 
+      end if
+!#########################################################################
 	if (myrank.eq.master.and.exts)
      1   close(10101)		! Close the binary output file
 

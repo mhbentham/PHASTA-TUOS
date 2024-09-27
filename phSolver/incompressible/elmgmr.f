@@ -27,6 +27,7 @@ c
         use local_mass
         use spat_var_eps
         use timedata    ! for iblkts usage
+        use cf_arrays    ! Magnus, bubble controller access lift control arrays
         use bub_track   ! access to bubble information array
 c
         include "common.h"
@@ -187,6 +188,16 @@ c!... arrays used in bubble tracking advanced analysis
         Shear_NodeMax(:,:)      = -1.0e10
         endif
 
+!#################################################################
+!MB, bubble controller
+!       the following subroutine will calculate the control forces in x y, z
+!       directions
+        if(iCForz.eq.1)then
+                CALL CFcalculator()
+        end if !iCForz
+!#################################################################
+
+
 !Matt T. Initialize bubble coalecence control variables
         if (coalcon.eq.1) then
 !           if (update_coalcon.eq.1) then
@@ -222,6 +233,7 @@ c!... arrays used in bubble tracking advanced analysis
 
 c!... assemble local element volume matrix and bubble information array
           if(iBT .eq. 1)  allocate( bub_info(npro,22) )
+          if(iCForz.eq.1) allocate( cf_var(npro,15)) ! MB, bubble controller
           allocate(elemvol_local(npro))
           elemvol_local(:)=elemvol_global(iel:iel+npro-1)
 c
@@ -256,6 +268,14 @@ c
            deallocate ( bub_info )
         ENDIF !iBT
 !----------------------------------------------------------------------
+
+!######################################################################
+! MB, required for the bubble controller
+        IF(iCForz.eq.1)then
+           call CFASSY()
+           deallocate ( cf_var )
+        ENDIF !iCForz
+!######################################################################
 
 c           if (myrank .eq. master) write(*,*) 'AsIGMR is done, iblk = ', iblk
 c
@@ -300,6 +320,14 @@ c!.... Matt Talley's Bubble Coalescence Control Subroutine
      &                     avgycoordf, avgzcoordf)
 !          endif
         endif
+
+! ##################################################################
+!Magnus, bubble controller
+c!... The MPI communications for control forces Jun, 2014 Fall
+        if(iCForz.eq.1)then
+                CALL CFMPIprocess()
+        end if !iCForz
+! ##################################################################
 
 c$$$       if(ibksiz.eq.20 .and. iwrote.ne.789) then
 c$$$          do i=1,nshg
