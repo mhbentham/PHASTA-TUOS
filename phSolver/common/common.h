@@ -156,11 +156,25 @@ c
      &                   coalest, coalcon_rem(100)
 c
 c MB, added key bubble controller inputs below
-        common /bubstudy/ DomainSize(6), phi_inner, phi_outer,    
-     &                    iClrLiq, iBK, Nbubtot, Nghost,
-     &                    xcfcoeff(10), ycfcoeff(9), zcfcoeff(9),
-     &                    shear_rate, vel_centre, y_drag_flip,
-     &                    icforz, icforz_where, numts_histyavg
+c added integer decleration above to stop these values being read as 0
+c didnt seem to work however
+c
+
+
+         common /bubstudy/ xcfcoeff(10), ycfcoeff(9), zcfcoeff(9),
+     &                     DomainSize(6), phi_inner, phi_outer,
+     &                     shear_rate, vel_centre, y_drag_flip,
+     &                     iCForz, iCForz_where, numts_histyavg,
+     &                     iClrLiq, iBK, Nbubtot, Nghost                   
+
+c        common /bubstudy/ DomainSize(6), phi_inner, phi_outer,    
+c     &                    iClrLiq, iBK, Nbubtot, Nghost,
+c     &                    xcfcoeff(10), ycfcoeff(9), zcfcoeff(9),
+c     &                    shear_rate, vel_centre, y_drag_flip,
+c     &                    iCForz, iCForz_where, numts_histyavg
+
+
+
 c 
         common /shpdat/ nshape, nshapeb, maxshb,
      &                  nshl, nshlb,nfath,  ntopsh,  nsonmax

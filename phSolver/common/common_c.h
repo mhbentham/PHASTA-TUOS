@@ -376,8 +376,8 @@ extern "C" {
     double shear_rate;    // bubble controller
     double vel_centre;    // bubble controller
     double y_drag_flip;   // bubble controller
-    int icforz;           // bubble controller
-    int icforz_where;     // bubble controller
+    int iCForz;           // bubble controller
+    int iCForz_where;     // bubble controller
     int numts_histyavg;   // bubble controller
     int iClrLiq;
     int iBK;
