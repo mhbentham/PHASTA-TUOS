@@ -100,9 +100,11 @@ int input_fform(char inpfname[])
     //Control Force
     bubstudy.iClrLiq = inp.GetValue("Color local liquid");
     bubstudy.iBK = inp.GetValue("Break up tracking");
-    bubstudy.icforz = inp.GetValue("Matts Control Force");
-    bubstudy.icforz_where = inp.GetValue("Apply to Whole Domain");
-    if (bubstudy.icforz == 1) {
+    bubstudy.iCForz = inp.GetValue("Matts Control Force");
+    bubstudy.iCForz_where = inp.GetValue("Apply to Whole Domain");
+    std::cout << "Value of iCForz is: " << bubstudy.iCForz << std::endl;
+
+    if (bubstudy.iCForz == 1) {
        vector<double> xcfcoeffvec;
        vector<double> ycfcoeffvec;
        vector<double> zcfcoeffvec;
