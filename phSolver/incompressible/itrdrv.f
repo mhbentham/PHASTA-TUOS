@@ -28,8 +28,8 @@ c! Irene Vignon, Fall 2004. Impedance BC
 c! Jun Fang, Summer 2014. Bubble Tracking
 c!----------------------------------------------------------------------
 c
-      USE, INTRINSIC :: ISO_C_BINDING !for calling C++ routines
-      use pvsQbi        !gives us splag (the spmass at the end of this run 
+      !USE, INTRINSIC :: ISO_C_BINDING !for calling C++ routines
+      use pvsQbi        !gives us splag (the spmass at the end olsf this run 
       use specialBC     !gives us itvn
       use timedata      !allows collection of time series
       use convolImpFlow !uses flow history and impedance for convolution
@@ -698,8 +698,11 @@ c!.... -----------------> End of initialization <-----------------
 c
 !######################################################################
 ! Magnus, bubble controller initialization
-      if (myrank.eq.master) write(*,*) "iCForz is", iCForz
-      if (myrank.eq.master) write(*,*) "iCForz_where is", iCForz_where
+      !iCForz = 1  ! NOTE THIS IS TEMPORARY FIX, SHOULD BE READ FROM INP
+      if (myrank.eq.master) write(*,*) "iCForz is ", iCForz
+      if (myrank.eq.master) write(*,*) "phi_inner is ", phi_inner
+      if (myrank.eq.master) write(*,*) "iClrLiq is ", iClrLiq
+      if (myrank.eq.master) write(*,*) "iCForz_where is ", iCForz_where
       if(iCForz.eq.1)then
          allocate (xcf(nstep(1)))
          allocate (ycf(nstep(1)))
