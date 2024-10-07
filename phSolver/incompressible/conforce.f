@@ -1097,7 +1097,8 @@ c!----------------------------------------------------------------------
          write(744,738) avgxcf, avgycf, avgzcf
          write(745,739) dx_new,dy_new,dz_new,ddxvel,ddyvel,ddzvel
          write(746,738) avgxcforce, avgycforce, avgzcforce
-         write(747,738) xcfnewtons, ycfnewtons, zcfnewtons
+         write(747,740) lstep, time-delt(itseq), xcfnewtons, 
+     &                    ycfnewtons, zcfnewtons
          write(748,738) xcf(istp), ycf(istp), zcf(istp)
       end if
 
@@ -1159,6 +1160,7 @@ c!----------------------------------------------------------------------
  738  format(ES22.15, 2x, ES22.15, 2x, ES22.15)
  739  format(ES22.15, 2x, ES22.15, 2x, ES22.15, 2x,
      1           ES22.15, 2x, ES22.15, 2x, ES22.15)
+ 740  format(I6, 2x, ES22.15, 2x, ES22.15, 2x, ES22.15, 2x, ES22.15)
 
       end !end post-processing
 c======================================================================
