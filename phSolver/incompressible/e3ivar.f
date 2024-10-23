@@ -766,6 +766,16 @@ c_______________________________________________________________________________
     
 	end do   ! i, npro
 
+!#####################################################################
+! MB, call the subroutine to collect bubble controller data
+      if(iCForz.eq.1)then
+         call CFCollect(xx,        u1,     u2,     u3,
+     &                    Sclr,      epsilon_ls_tmp, elemvol_local,
+     &                    rho,       sforce)
+      end if !iCForz
+
+!#####################################################################
+
         endif        ! end of the surface tension force calculation
 !----------------------------------------------------------------------
 !       collect information for advanced analysis.

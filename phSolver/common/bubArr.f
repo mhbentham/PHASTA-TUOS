@@ -1,18 +1,18 @@
-!        module cf_arrays
-!!----------------------------------------------------------------------
-!!
-!!       This module contains some important arrays and variables, which
-!!       are not convinent to transfer between subroutines.
-!!       Jun Fang,                                             Fall,2014
-!!
-!!----------------------------------------------------------------------
-!        integer iyhistst, iyhisten
-!        real*8, allocatable ::  cf_var(:,:)
-!        real*8, allocatable ::  xcf(:), xcf_old(:)
-!        real*8, allocatable ::  ycf(:), ycf_old(:)
-!        real*8, allocatable ::  zcf(:), zcf_old(:)
+        module cf_arrays
+!----------------------------------------------------------------------
 !
-!        end module
+!       This module contains some important arrays and variables, which
+!       are not convinent to transfer between subroutines.
+!       Jun Fang,                                             Fall,2014
+!
+!----------------------------------------------------------------------
+        integer iyhistst, iyhisten
+        real*8, allocatable ::  cf_var(:,:)
+        real*8, allocatable ::  xcf(:), xcf_old(:)
+        real*8, allocatable ::  ycf(:), ycf_old(:)
+        real*8, allocatable ::  zcf(:), zcf_old(:)
+
+        end module
 !
         module bub_track
 !----------------------------------------------------------------------

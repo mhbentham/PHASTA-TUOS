@@ -256,11 +256,89 @@ extern "C" {
     double C_int_cap;
     double epsilonBT;
 
+// Magnus, bubble controller variables start
+    double xdistancesum;
+    double ydistancesum;
+    double zdistancesum;
+    double totalxdist;
+    double totalydist;
+    double totalzdist;
+    double avgxdistance;
+    double avgydistance;
+    double avgzdistance;
+    double avgxdistold;
+    double avgydistold;
+    double avgzdistold;
+    double xdistideal;
+    double ydistideal;
+    double zdistideal;
+    double dx_new;
+    double dy_new;
+    double dz_new;
+    double ddxvel;
+    double ddyvel;
+    double ddzvel;
+    double xvelsum;
+    double yvelsum;
+    double zvelsum;
+    double totalxvel;
+    double totalyvel;
+    double totalzvel;
+    double avgxvel;
+    double avgyvel;
+    double avgzvel;
+    double avgxvelold;
+    double avgyvelold;
+    double avgzvelold;
+    double velwghtsum;
+    double totalvelwght;
+    double bubvolsum;
+    double totbubvol;
+    double denssum;
+    double totbubdens;
+    double xcforcesum;
+    double ycforcesum;
+    double zcforcesum;
+    double totalxcforce;
+    double totalycforce;
+    double totalzcforce;
+    double totalxcforceold;
+    double totalycforceold;
+    double totalzcforceold;
+    double avgxcforce;
+    double avgycforce;
+    double avgzcforce;
+    double avgxcforceold;
+    double avgycforceold;
+    double avgzcforceold;
+    double avgxcf;
+    double avgycf;
+    double avgzcf;
+    double x_c_f;
+    double y_c_f;
+    double z_c_f;
+    double xforcenewtsum;
+    double yforcenewtsum;
+    double zforcenewtsum;
+    double totxfnewtsum;
+    double totyfnewtsum;
+    double totzfnewtsum;
+    double xcfnewtons;
+    double ycfnewtons;
+    double zcfnewtons;
+    double rholiq;
+    double rhogas;
+// Magnus, bubble controller variables end
+
     double coalbubrad;
     double coalcon_dist;    
     double avgxcoordold[100];
     double avgycoordold[100];
     double avgzcoordold[100];
+
+    int i_res_cf;   // bubble controller
+    int nzinBsum;   // bubble controller
+    int ntotnzinB;  // bubble controller
 
     int iLSet;
     int iuse_vfcont_cap;
@@ -287,10 +365,20 @@ extern "C" {
     int coalcon_rem[100];
   } levlset;
 
+// MAGNUS, added coeffs below for bubble controller
   extern struct {
+    double xcfcoeff[10];  // bubble controller
+    double ycfcoeff[9];  // bubble controller
+    double zcfcoeff[9];  // bubble controller
     double DomainSize[6];
-    double phi_inner;
+    double phi_inner;     
     double phi_outer;
+    double shear_rate;    // bubble controller
+    double vel_centre;    // bubble controller
+    double y_drag_flip;   // bubble controller
+    int iCForz;           // bubble controller
+    int iCForz_where;     // bubble controller
+    int numts_histyavg;   // bubble controller
     int iClrLiq;
     int iBK;
     int Nbubtot;
