@@ -1367,7 +1367,7 @@ c======================================================================
      &        status="old",action="read",iostat=ierror)
          if(ierror /= 0) stop "file 707 creation error"
          do i=1,i_ts
-          read(707,713)nwt_cfr(i,1:3)
+          read(707,716)nwt_cfr(i,1:3)
          end do
          close(707)
 
@@ -1375,7 +1375,7 @@ c======================================================================
      &        status="replace",action="write",iostat=ierror)
          if(ierror /= 0) stop "file 707 creation error"
          do i=1,i_ts
-          write(707,713)nwt_cfr(i,1:3)
+          write(707,716)nwt_cfr(i,1:3)
          end do
          close(707)
          deallocate(nwt_cfr)
@@ -1411,6 +1411,7 @@ c======================================================================
 714   format(E22.15, 2x, E22.15, 2x, E22.15, 2x,
      &       E22.15, 2x, E22.15, 2x, E22.15)
 715   format(A, I6, A, I6)
+716   format(I6, 2x, E22.15, 2x, E22.15, 2x, E22.15, 2x, E22.15)
 
         return
         end

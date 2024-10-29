@@ -211,9 +211,14 @@ c!....Matt Talley's Bubble Coal Control
               fbub = trim(fbub)//trim(cname2(lstep))
               fbub = trim(fbub)//'.dat'
               fbub = trim(fbub)
+!             open(unit=20202, file=fbub, status="unknown",
+!     &        form="formatted", recl=2*8+13*14,
+!     &        access='direct')
               open(unit=20202, file=fbub, status="unknown",
-     &        form="formatted", recl=2*8+13*14,
-     &        access='direct')
+     &        form="formatted", recl=324,
+     &        access='sequential')
+! Magnus Oct 2024, change access from direct to sequential
+! increased recl, which determines the data size of each record
               write(*,*) 'OpenBubFiles is done!'
            endif
            if(icoalCtrl.eq.1) then
@@ -471,7 +476,7 @@ c          if (myrank .eq. master) write(*,*) 'l. 230 itrdrv.f'
 
          IF (svLSFlag .EQ. 1) THEN
             svLS_nFaces = 1
-            write(*,*) 'myrank, gnNo =', myrank, gnNo
+            !write(*,*) 'myrank, gnNo =', myrank, gnNo
             !if (myrank.eq.master) write(*,*) 'calling svLS_BC_CREATE'
             !if (myrank.eq.master) write(*,*) 'gNodes is ', gNodes
             
