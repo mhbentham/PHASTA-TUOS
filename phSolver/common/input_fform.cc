@@ -102,7 +102,7 @@ int input_fform(char inpfname[])
     bubstudy.iBK = inp.GetValue("Break up tracking");
     bubstudy.iCForz = inp.GetValue("Matts Control Force");
     bubstudy.iCForz_where = inp.GetValue("Apply to Whole Domain");
-    std::cout << "Value of iCForz is: " << bubstudy.iCForz << std::endl;
+//    std::cout << "Value of iCForz is: " << bubstudy.iCForz << std::endl;
 
     if (bubstudy.iCForz == 1) {
        vector<double> xcfcoeffvec;
