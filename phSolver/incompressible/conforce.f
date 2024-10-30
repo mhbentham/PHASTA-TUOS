@@ -139,7 +139,8 @@ c======================================================================
 !-----------------------------------------------------------------------
       use cf_arrays  ! m
       USE, INTRINSIC :: ISO_C_BINDING !for calling C++ routines
-
+      use bub_track ! magnus, mpid
+        
       include "common.h"
       include "mpif.h"
       include "auxmpi.h"
@@ -163,6 +164,12 @@ c======================================================================
       character*50:: lstepc
       logical dir_lf
 
+
+
+!----------------------------------------------------------------------
+! perform some print tests to see how the mpid could be included
+      if (myrank.eq.master) write(*,*) 'mb, number of bubbles', i_num_bubbles  
+!----------------------------------------------------------------------
 !----------------------------------------------------------------------
 !c.... Open files for matt thomas control force
       if(myrank.eq.master) write(*,*)
@@ -879,6 +886,7 @@ c======================================================================
 !
 !----------------------------------------------------------------------
       use cf_arrays   ! to access lift control arrays
+      use bub_track    !magnus, mpid
       include "common.h"
 
       dimension u1(npro),  u2(npro),  u3(npro)
@@ -893,28 +901,44 @@ c======================================================================
       rholiq=datmat(1,1,1)
       rhogas=datmat(1,1,2)        
 
+! below placed for mpid method testing
+      !if (myrank .eq. master) write(*,*) 'block to check bubble element belongs to'
+!      do j=1, npro
+!        id= int(bub_info(j,11))
+!        if (id .ne. 0 ) write(*,*) 'nonzero id found: ', id
+        !do bub=1, i_num_bubbles
+            !write(*,*) 'bub id is ', id
+            !if (bub .eq. id) then
+                !write(*,*)'element belongs to bubble on rank', myrank
+            !end if
+        !enddo
+!      enddo
 
       do i=1,npro
          if(Sclr(i).le.epsilon_ls_tmp) then
-           cf_var(i,1) = xx(i,1)
-           cf_var(i,2) = xx(i,2)
-           cf_var(i,3) = xx(i,3)
-           cf_var(i,4) = u1(i)*(rholiq-rho(i))*elemvol_local(i)
-           cf_var(i,5) = u2(i)*(rholiq-rho(i))*elemvol_local(i)
-           cf_var(i,6) = u3(i)*(rholiq-rho(i))*elemvol_local(i)
-           cf_var(i,7) = x_c_f*elemvol_local(i)
-           cf_var(i,8) = y_c_f*elemvol_local(i)
-           cf_var(i,9) = z_c_f*elemvol_local(i)
-           cf_var(i,13)= (rholiq-rho(i))*elemvol_local(i)
-           cf_var(i,14)= elemvol_local(i)
-           cf_var(i,15)= rho(i)*elemvol_local(i)*
+            id = int(bub_info(i,11))    !mpid
+            if (id .eq. 1) then !mpid
+                cf_var(i,1) = xx(i,1)
+                cf_var(i,2) = xx(i,2)
+                cf_var(i,3) = xx(i,3)
+                cf_var(i,4) = u1(i)*(rholiq-rho(i))*elemvol_local(i)
+                cf_var(i,5) = u2(i)*(rholiq-rho(i))*elemvol_local(i)
+                cf_var(i,6) = u3(i)*(rholiq-rho(i))*elemvol_local(i)
+                cf_var(i,7) = x_c_f*elemvol_local(i)
+                cf_var(i,8) = y_c_f*elemvol_local(i)
+                cf_var(i,9) = z_c_f*elemvol_local(i)
+                cf_var(i,13)= (rholiq-rho(i))*elemvol_local(i)
+                cf_var(i,14)= elemvol_local(i)
+                cf_var(i,15)= rho(i)*elemvol_local(i)*
      &                     ((rholiq-rho(i))/(rholiq-rhogas))
            !velocity in bubble need be averaged by
            !(rho_l-rho(i))*vol(i)
            !densty in bub wghtd by elment vol and denswght
+            end if !mpid, check element id
          end if
       end do
 
+      !mpid note, ignore application to the whole domain for now
       if(iCForz_where .eq. 1) then !apply cf to whole domain
          do i=1,npro
             sforce(i,1) = sforce(i,1) + x_c_f
@@ -933,14 +957,17 @@ c======================================================================
       else !apply cf inside bubble
          do i = 1, npro
             if(Sclr(i).le.epsilon_ls_tmp)then
-             denswght=(rholiq-rho(i))/(rholiq-rhogas)
-             sforce(i,1)= sforce(i,1) + x_c_f*denswght/rho(i)
-             sforce(i,2)= sforce(i,2) + y_c_f*denswght/rho(i)
-             sforce(i,3)= sforce(i,3) + z_c_f*denswght/rho(i)
-             !Extract the Force in [N]
-             cf_var(i,10)=x_c_f*denswght*elemvol_local(i)
-             cf_var(i,11)=y_c_f*denswght*elemvol_local(i)
-             cf_var(i,12)=z_c_f*denswght*elemvol_local(i)
+                id = int(bub_info(i,11))    !mpid
+                if (id .eq. 1) then !mpid
+                    denswght=(rholiq-rho(i))/(rholiq-rhogas)
+                    sforce(i,1)= sforce(i,1) + x_c_f*denswght/rho(i)
+                    sforce(i,2)= sforce(i,2) + y_c_f*denswght/rho(i)
+                    sforce(i,3)= sforce(i,3) + z_c_f*denswght/rho(i)
+                    !Extract the Force in [N]
+                    cf_var(i,10)=x_c_f*denswght*elemvol_local(i)
+                    cf_var(i,11)=y_c_f*denswght*elemvol_local(i)
+                    cf_var(i,12)=z_c_f*denswght*elemvol_local(i)
+                end if
             end if
          end do
       end if !iCForz_where
