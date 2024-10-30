@@ -819,6 +819,7 @@ c======================================================================
            endif !Sclr(i) for the bubble region and liquid shell
 !              if(bub_info(i,21).ne.0.0)write(*,*)'bub21', bub_info(i,21)
 !              if(bub_info(i,20).ne.0.0)write(*,*)'bub20', bub_info(i,20)
+!              if(bub_info(i,11).ne.0.0)write(*,*)'bub11', bub_info(i,11)
 
         enddo !npro
 
