@@ -769,10 +769,20 @@ c_______________________________________________________________________________
 !#####################################################################
 ! MB, call the subroutine to collect bubble controller data
       if(iCForz.eq.1)then
+         ! magnus, mpid ---------------------------------------------
+         ! if using mpid, we need to collect bubbleInformation first
+         if(iBT .eq. 1) then  ! if tracking
+            CurvInfo(:) = divqi(:,idflow+1)
+            call BubCollect(u1,       u2,     u3,     Sclr, dist2w,
+     &                      xx,       yl,     bml,    elemvol_local,
+     &                     rho,      Tempb,  gytemp, CurvInfo)
+         endif !iBT
+         ! magnus, mpid ---------------------------------------------
          call CFCollect(xx,        u1,     u2,     u3,
      &                    Sclr,      epsilon_ls_tmp, elemvol_local,
      &                    rho,       sforce)
-      end if !iCForz
+         
+      endif !iCForz
 
 !#####################################################################
 
@@ -780,12 +790,15 @@ c_______________________________________________________________________________
 !----------------------------------------------------------------------
 !       collect information for advanced analysis.
 !----------------------------------------------------------------------
-        if(iBT .eq. 1) then
-           CurvInfo(:) = divqi(:,idflow+1)
-           call BubCollect(u1,       u2,     u3,     Sclr, dist2w,
+! if no bubble controller, we call pid's bubble collect here, magnus
+      if (iCForz .ne. 1) then !mpid
+         if(iBT .eq. 1) then
+            CurvInfo(:) = divqi(:,idflow+1)
+            call BubCollect(u1,       u2,     u3,     Sclr, dist2w,
      &                     xx,       yl,     bml,    elemvol_local,
      &                     rho,      Tempb,  gytemp, CurvInfo)
-        endif !iBT
+         endif !iBT
+      endif  ! iCForz,  for mpid
 !----------------------------------------------------------------------
 c
 c!            Xdis=zero                                               !Farhad
