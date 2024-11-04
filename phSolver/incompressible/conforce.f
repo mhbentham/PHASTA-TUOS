@@ -162,14 +162,18 @@ c======================================================================
       logical ycf_old_log
       logical ResCFexist      !to continue matts cf after a break in phasta
       character*50:: lstepc
+      character*2 :: id_char ! mpid, character for the bubble id
       logical dir_lf
 
 
 
 !----------------------------------------------------------------------
-! perform some print tests to see how the mpid could be included
-      if (myrank.eq.master) write(*,*) 'mb, number of bubbles', i_num_bubbles  
+! print the number of files required for mpid - magnus
+      if (myrank.eq.master) then
+        write(*,*) 'number of bubbles to control', i_num_bubbles
+      end if
 !----------------------------------------------------------------------
+
 !----------------------------------------------------------------------
 !c.... Open files for matt thomas control force
       if(myrank.eq.master) write(*,*)
@@ -181,23 +185,31 @@ c======================================================================
 !       Check the existence of folder lift-results, create a new one if
 !       not
 !----------------------------------------------------------------------
-      if(myrank.eq.master)then
-        inquire(directory='../lift-results',exist=dir_lf)
-        if(dir_lf.eqv..False.) then
-           write(*,*) 'lift-results not found, create a new one!'
-           write(*,*)
-           call system('mkdir ../lift-results')
-        else
-           write(*,*) 'lift-results already exists'
-           write(*,*)
+      do bub_id=1, i_num_bubbles !for mpid a create directory for each bubble
+        write(id_char, '(I0)') bub_id   !convert bub_id to character
+        if(myrank.eq.master)then
+            inquire(directory='../controller/'//trim(id_char)//'_lift-results',
+     &          exist=dir_lf)
+            if(dir_lf.eqv..False.) then
+            write(*,*) 'lift-results not found for bubble', id_char,
+     &                 '. Create a new one!'
+            write(*,*)
+            call system('mkdir ../controller/'//trim(id_char)//'_lift-results')
+            else
+            write(*,*) 'lift-results already exists for bubble', id_char
+            write(*,*)
+            end if
+
+            inquire(directory='../controller/'//trim(id_char)//'_lift-results/restarts',exist=dir_lf)
+            if(dir_lf.eqv..False.) then
+            call system('mkdir ../controller/'//trim(id_char)//'_lift-results/restarts')
+            endif
+
         end if
+      end do    ! bubble count
 
-        inquire(directory='../lift-results/restarts',exist=dir_lf)
-        if(dir_lf.eqv..False.) then
-           call system('mkdir ../lift-results/restarts')
-        endif
-
-      end if
+      do bub_id=1, i_num_bubbles     !mpid bubble loop
+        write(id_char, '(I0)') bub_id   !convert id int to char
 
       if(myrank.eq.master)then
          if(     lstep.ge.0 .and. lstep.le.9)then
@@ -225,7 +237,7 @@ c======================================================================
          write(*,*)'Looking for restart_control_force'//trim(lstepc)//
      &            '.dat'
 
-         inquire(file='../lift-results/restarts/'//
+         inquire(file='../controller/'//trim(id_char)//'_lift-results/restarts/'//
      &             'restart_control_force'//
      &             trim(lstepc)//'.dat',
      &             exist=ResCFexist)
@@ -233,7 +245,7 @@ c======================================================================
          if(ResCFexist .eqv. .true.) then       !ResCFexist is true
 
             i_res_cf = 1
-
+            write(*,*)'for bubble ', bub_id            
             write(*,*)'restart_control_force'//trim(lstepc)//
      &                  '.datexists'
             write(*,*)'Continuing control force based on ',
@@ -244,35 +256,35 @@ c======================================================================
 
             call preprocess_lift_files(lstep)
 
-      OPEN(unit=741,file='../lift-results/average_distance.dat',
+      OPEN(unit=741,file='../controller/'//trim(id_char)//'_lift-results/average_distance.dat',
      &  status="old",action="write",position="append",iostat=ierror)
       IF(ierror /= 0) STOP "Error opening file 741"
 
-      OPEN(unit=742,file='../lift-results/average_velocity.dat',
+      OPEN(unit=742,file='../controller/'//trim(id_char)//'_lift-results/average_velocity.dat',
      &  status="old",action="write",position="append",iostat=ierror)
       IF(ierror /= 0) STOP "Error opening file 742"
      
-      OPEN(unit=743,file='../lift-results/total_control_force.dat',
+      OPEN(unit=743,file='../controller/'//trim(id_char)//'_lift-results/total_control_force.dat',
      &  status="old",action="write",position="append",iostat=ierror)
       IF(ierror /= 0) STOP "Error opening file 743"
      
-      OPEN(unit=744,file='../lift-results/historical_average.dat',
+      OPEN(unit=744,file='../controller/'//trim(id_char)//'_lift-results/historical_average.dat',
      &  status="old",action="write",position="append",iostat=ierror)
       IF(ierror /= 0) STOP "Error opening file 744"
      
-      OPEN(unit=745,file='../lift-results/pos_vel_difference.dat',
+      OPEN(unit=745,file='../controller/'//trim(id_char)//'_lift-results/pos_vel_difference.dat',
      &  status="old",action="write",position="append",iostat=ierror)
       IF(ierror /= 0) STOP "Error opening file 745"
      
-      OPEN(unit=746,file='../lift-results/average_control_force.dat',
+      OPEN(unit=746,file='../controller/'//trim(id_char)//'_lift-results/average_control_force.dat',
      &  status="old",action="write",position="append",iostat=ierror)
       IF(ierror /= 0) STOP "Error opening file 746"
      
-      OPEN(unit=747,file='../lift-results/newtons_control_force.dat',
+      OPEN(unit=747,file='../controller/'//trim(id_char)//'_lift-results/newtons_control_force.dat',
      &  status="old",action="write",position="append",iostat=ierror)
       IF(ierror /= 0) STOP "Error opening file 747"
 
-      OPEN(unit=845,file='../lift-results/restarts/'//
+      OPEN(unit=845,file='../controller/'//trim(id_char)//'_lift-results/restarts/'//
      &                    'restart_control_force'//
      &                    trim(lstepc)//'.dat',
      &  status="old",action="read",iostat=ierror)
@@ -304,7 +316,7 @@ c======================================================================
               write(lstepc,'(i10.10)')lstep
             end if
 
-      OPEN(unit=846,file='../lift-results/restarts/'//
+      OPEN(unit=846,file='../controller/'//trim(id_char)//'_lift-results/restarts/'//
      &             'restart_control_force'//trim(lstepc)//'.dat',
      &             status="new",action="write",iostat=ierror)
       IF(ierror /= 0) STOP "file 846 creation error"
@@ -327,40 +339,40 @@ c======================================================================
       if(myrank.eq.master)write(*,*)'delete it and re-run'
       CLOSE(846)
 
-      OPEN(unit=741,file='../lift-results/average_distance.dat',
+      OPEN(unit=741,file='../controller/'//trim(id_char)//'_lift-results/average_distance.dat',
      &   status="new",action="write",iostat=ierror)
       IF(ierror /= 0) STOP "file 741 creation error"
      
-      OPEN(unit=742,file='../lift-results/average_velocity.dat',
+      OPEN(unit=742,file='../controller/'//trim(id_char)//'_lift-results/average_velocity.dat',
      &   status="new",action="write",iostat=ierror)
       IF(ierror /= 0) STOP "file 742 creation error"
      
-      OPEN(unit=743,file='../lift-results/total_control_force.dat',
+      OPEN(unit=743,file='../controller/'//trim(id_char)//'_lift-results/total_control_force.dat',
      &   status="new",action="write",iostat=ierror)
       IF(ierror /= 0) STOP "file 743 creation error"
       
-      OPEN(unit=744,file='../lift-results/historical_average.dat',
+      OPEN(unit=744,file='../controller/'//trim(id_char)//'_lift-results/historical_average.dat',
      &   status="new",action="write",iostat=ierror)
       IF(ierror /= 0) STOP "file 744 creation error"
       
-      OPEN(unit=745,file='../lift-results/pos_vel_difference.dat',
+      OPEN(unit=745,file='../controller/'//trim(id_char)//'_lift-results/pos_vel_difference.dat',
      &   status="new",action="write",iostat=ierror)
       IF(ierror /= 0) STOP "file 745 creation error"
       
-      OPEN(unit=746,file='../lift-results/average_control_force.dat',
+      OPEN(unit=746,file='../controller/'//trim(id_char)//'_lift-results/average_control_force.dat',
      &   status="new",action="write",iostat=ierror)
       IF(ierror /= 0) STOP "file 746 creation error"
      
-      OPEN(unit=747,file='../lift-results/newtons_control_force.dat',
+      OPEN(unit=747,file='../controller/'//trim(id_char)//'_lift-results/newtons_control_force.dat',
      &   status="new",action="write",iostat=ierror)
       IF(ierror /= 0) STOP "file 747 creation error"
      
-      OPEN(unit=748,file='../lift-results/xyzcf.dat',
+      OPEN(unit=748,file='../controller/'//trim(id_char)//'_lift-results/xyzcf.dat',
      &   status="new",action="write",iostat=ierror)
       IF(ierror /= 0) STOP "file 748 creation error"
 
-         end if                                       !resCFexist
-      end if                                         !myrank
+        end if                                          !resCFexist
+        end if                                          !myrank
 
       call MPI_BARRIER(MPI_COMM_WORLD,ierr)
 
@@ -621,6 +633,8 @@ c======================================================================
  738  format(E22.15, 2x, E22.15, 2x, E22.15)
  739  format(E22.15, 2x, E22.15, 2x, E22.15, 2x,
      1           E22.15, 2x, E22.15, 2x, E22.15)
+
+        end do                                          !mpid, bubble loop
 
         end !CFrestar initialization
 c=====================================================================
@@ -1227,210 +1241,215 @@ c======================================================================
         integer :: i_ts
         integer :: ierror, status
 
+        character*2 :: id_char
+
         !There are 8 files to pre-process. Getting lengths of files
-        call lcounter(nl_ad,'../lift-results/average_distance.dat')
-        call lcounter(nl_av,'../lift-results/average_velocity.dat')
-        call lcounter(nl_tc,'../lift-results/total_control_force.dat')
-        call lcounter(nl_ha,'../lift-results/historical_average.dat')
-        call lcounter(nl_pv,'../lift-results/pos_vel_difference.dat')
-        call lcounter(nl_ac,'../lift-results/average_control_force.dat')
-        call lcounter(nl_nc,'../lift-results/newtons_control_force.dat')
-        call lcounter(nl_cf,'../lift-results/xyzcf.dat')
+        do bub_id=1, i_num_bubbles
+            
+            write(id_char, '(I0)') bub_id
+            call lcounter(nl_ad,'../controller/'//trim(id_char)//'_lift-results/average_distance.dat')
+            call lcounter(nl_av,'../controller/'//trim(id_char)//'_lift-results/average_velocity.dat')
+            call lcounter(nl_tc,'../controller/'//trim(id_char)//'_lift-results/total_control_force.dat')
+            call lcounter(nl_ha,'../controller/'//trim(id_char)//'_lift-results/historical_average.dat')
+            call lcounter(nl_pv,'../controller/'//trim(id_char)//'_lift-results/pos_vel_difference.dat')
+            call lcounter(nl_ac,'../controller/'//trim(id_char)//'_lift-results/average_control_force.dat')
+            call lcounter(nl_nc,'../controller/'//trim(id_char)//'_lift-results/newtons_control_force.dat')
+            call lcounter(nl_cf,'../controller/'//trim(id_char)//'_lift-results/xyzcf.dat')
 
-        if(i_ts.lt.nl_ad)then
-         write(*,715)'Condensing average_distance.dat to ',i_ts,
+            if(i_ts.lt.nl_ad)then
+            write(*,715)'Condensing average_distance.dat to ',i_ts,
      &               ' number of lines from ',nl_ad
-         allocate(avg_dis(i_ts,4),stat=status)
-         if(status /= 0) stop 'Error allocating avg_dis'
+            allocate(avg_dis(i_ts,4),stat=status)
+            if(status /= 0) stop 'Error allocating avg_dis'
 
-         open(unit=701,file='../lift-results/average_distance.dat',
+            open(unit=701,file='../controller/'//trim(id_char)//'_lift-results/average_distance.dat',
      &        status="old",action="read",iostat=ierror)
-         if(ierror /= 0) stop "file 701 creation error"
-         do i=1,i_ts
-          read(701,711)avg_dis(i,1:4)
-         end do
-         close(701)
+            if(ierror /= 0) stop "file 701 creation error"
+            do i=1,i_ts
+            read(701,711)avg_dis(i,1:4)
+            end do
+            close(701)
 
-         open(unit=701,file='../lift-results/average_distance.dat',
+            open(unit=701,file='../controller/'//trim(id_char)//'_lift-results/average_distance.dat',
      &        status="replace",action="write",iostat=ierror)
-         if(ierror /= 0) stop "file 701 creation error"
-         do i=1,i_ts
-          write(701,711)avg_dis(i,1:4)
-         end do
-         close(701)
-         deallocate(avg_dis)
-        end if
+            if(ierror /= 0) stop "file 701 creation error"
+            do i=1,i_ts
+            write(701,711)avg_dis(i,1:4)
+            end do
+            close(701)
+            deallocate(avg_dis)
+            end if
 
-        if(i_ts.lt.nl_av)then
-         write(*,715)'Condensing average_velocity.dat to ',i_ts,
+            if(i_ts.lt.nl_av)then
+            write(*,715)'Condensing average_velocity.dat to ',i_ts,
      &               ' number of lines from ',nl_av
-         allocate(avg_vel(i_ts,3),stat=status)
-         if(status /= 0) stop 'Error allocating avg_vel'
-         allocate(avg_vts(i_ts),stat=status)
-         if(status /= 0) stop 'Error allocating avg_vts'
+            allocate(avg_vel(i_ts,3),stat=status)
+            if(status /= 0) stop 'Error allocating avg_vel'
+            allocate(avg_vts(i_ts),stat=status)
+            if(status /= 0) stop 'Error allocating avg_vts'
 
-         open(unit=702,file='../lift-results/average_velocity.dat',
+            open(unit=702,file='../controller/'//trim(id_char)//'_lift-results/average_velocity.dat',
      &        status="old",action="read",iostat=ierror)
-         if(ierror /= 0) stop "file 702 creation error"
-         do i=1,i_ts
-          read(702,712)avg_vts(i),avg_vel(i,1:3)
-         end do
-         close(702)
+            if(ierror /= 0) stop "file 702 creation error"
+            do i=1,i_ts
+            read(702,712)avg_vts(i),avg_vel(i,1:3)
+            end do
+            close(702)
 
-         open(unit=702,file='../lift-results/average_velocity.dat',
+            open(unit=702,file='../controller/'//trim(id_char)//'_lift-results/average_velocity.dat',
      &        status="replace",action="write",iostat=ierror)
-         if(ierror /= 0) stop "file 702 creation error"
-         do i=1,i_ts
-          write(702,712)avg_vts(i),avg_vel(i,1:3)
-         end do
-         close(702)
-         deallocate(avg_vts)
-         deallocate(avg_vel)
-        end if
+            if(ierror /= 0) stop "file 702 creation error"
+            do i=1,i_ts
+            write(702,712)avg_vts(i),avg_vel(i,1:3)
+            end do
+            close(702)
+            deallocate(avg_vts)
+            deallocate(avg_vel)
+            end if
 
-        if(i_ts.lt.nl_tc)then
-         write(*,715)'Condensing total_control_force.dat to ',i_ts,
+            if(i_ts.lt.nl_tc)then
+            write(*,715)'Condensing total_control_force.dat to ',i_ts,
      &               ' number of lines from ',nl_tc
-         allocate(tot_cfr(i_ts,3),stat=status)
-         if(status /= 0) stop 'Error allocating tot_cfr'
+            allocate(tot_cfr(i_ts,3),stat=status)
+            if(status /= 0) stop 'Error allocating tot_cfr'
 
-         open(unit=703,file='../lift-results/total_control_force.dat',
+            open(unit=703,file='../controller/'//trim(id_char)//'_lift-results/total_control_force.dat',
      &        status="old",action="read",iostat=ierror)
-         if(ierror /= 0) stop "file 703 creation error"
-         do i=1,i_ts
-          read(703,713)tot_cfr(i,1:3)
-         end do
-         close(703)
+            if(ierror /= 0) stop "file 703 creation error"
+            do i=1,i_ts
+            read(703,713)tot_cfr(i,1:3)
+            end do
+            close(703)
 
-         open(unit=703,file='../lift-results/total_control_force.dat',
+            open(unit=703,file='../controller/'//trim(id_char)//'_lift-results/total_control_force.dat',
      &        status="replace",action="write",iostat=ierror)
-         if(ierror /= 0) stop "file 703 creation error"
-         do i=1,i_ts
-          write(703,713)tot_cfr(i,1:3)
-         end do
-         close(703)
-         deallocate(tot_cfr)
-        end if
+            if(ierror /= 0) stop "file 703 creation error"
+            do i=1,i_ts
+            write(703,713)tot_cfr(i,1:3)
+            end do
+            close(703)
+            deallocate(tot_cfr)
+            end if
 
-        if(i_ts.lt.nl_ha)then
-         write(*,715)'Condensing historical_average.dat to ',i_ts,
+            if(i_ts.lt.nl_ha)then
+            write(*,715)'Condensing historical_average.dat to ',i_ts,
      &               ' number of lines from ',nl_ha
-         allocate(his_avg(i_ts,3),stat=status)
-         if(status /= 0) stop 'Error allocating his_avg'
+            allocate(his_avg(i_ts,3),stat=status)
+            if(status /= 0) stop 'Error allocating his_avg'
 
-         open(unit=704,file='../lift-results/historical_average.dat',
+            open(unit=704,file='../controller/'//trim(id_char)//'_lift-results/historical_average.dat',
      &        status="old",action="read",iostat=ierror)
-         if(ierror /= 0) stop "file 704 creation error"
-         do i=1,i_ts
-          read(704,713)his_avg(i,1:3)
-         end do
-         close(704)
+            if(ierror /= 0) stop "file 704 creation error"
+            do i=1,i_ts
+            read(704,713)his_avg(i,1:3)
+            end do
+            close(704)
 
-         open(unit=704,file='../lift-results/historical_average.dat',
+            open(unit=704,file='../controller/'//trim(id_char)//'_lift-results/historical_average.dat',
      &        status="replace",action="write",iostat=ierror)
-         if(ierror /= 0) stop "file 704 creation error"
-         do i=1,i_ts
-          write(704,713)his_avg(i,1:3)
-         end do
-         close(704)
-         deallocate(his_avg)
-        end if
+            if(ierror /= 0) stop "file 704 creation error"
+            do i=1,i_ts
+            write(704,713)his_avg(i,1:3)
+            end do
+            close(704)
+            deallocate(his_avg)
+            end if
 
-        if(i_ts.lt.nl_pv)then
-         write(*,715)'Condensing pos_vel_difference.dat to ',i_ts,
+            if(i_ts.lt.nl_pv)then
+            write(*,715)'Condensing pos_vel_difference.dat to ',i_ts,
      &               ' number of lines from ',nl_pv
-         allocate(pvd_iff(i_ts,6),stat=status)
-         if(status /= 0) stop 'Error allocating pvd_iff'
+            allocate(pvd_iff(i_ts,6),stat=status)
+            if(status /= 0) stop 'Error allocating pvd_iff'
 
-         open(unit=705,file='../lift-results/pos_vel_difference.dat',
+            open(unit=705,file='../controller/'//trim(id_char)//'_lift-results/pos_vel_difference.dat',
      &       status="old",action="read",iostat=ierror)
-         if(ierror /= 0) stop "file 705 creation error"
-         do i=1,i_ts
-          read(705,714)pvd_iff(i,1:6)
-         end do
-         close(705)
+            if(ierror /= 0) stop "file 705 creation error"
+            do i=1,i_ts
+            read(705,714)pvd_iff(i,1:6)
+            end do
+            close(705)
 
-         open(unit=705,file='../lift-results/pos_vel_difference.dat',
+            open(unit=705,file='../controller/'//trim(id_char)//'_lift-results/pos_vel_difference.dat',
      &       status="replace",action="write",iostat=ierror)
-         if(ierror /= 0) stop "file 705 creation error"
-         do i=1,i_ts
-          write(705,714)pvd_iff(i,1:6)
-         end do
-         close(705)
-         deallocate(pvd_iff)
-        end if
+            if(ierror /= 0) stop "file 705 creation error"
+            do i=1,i_ts
+            write(705,714)pvd_iff(i,1:6)
+            end do
+            close(705)
+            deallocate(pvd_iff)
+            end if
 
-        if(i_ts.lt.nl_ac)then
-         write(*,715)'Condensing average_control_force.dat to ',i_ts,
+            if(i_ts.lt.nl_ac)then
+            write(*,715)'Condensing average_control_force.dat to ',i_ts,
      &               ' number of lines from ',nl_ac
-         allocate(avg_cfr(i_ts,3),stat=status)
-         if(status /= 0) stop 'Error allocating avg_cfr'
+            allocate(avg_cfr(i_ts,3),stat=status)
+            if(status /= 0) stop 'Error allocating avg_cfr'
 
-         open(unit=706,file='../lift-results/average_control_force.dat',
+            open(unit=706,file='../controller/'//trim(id_char)//'_lift-results/average_control_force.dat',
      &       status="old",action="read",iostat=ierror)
-         if(ierror /= 0) stop "file 706 creation error"
-         do i=1,i_ts
-          read(706,713)avg_cfr(i,1:3)
-         end do
-         close(706)
+            if(ierror /= 0) stop "file 706 creation error"
+            do i=1,i_ts
+            read(706,713)avg_cfr(i,1:3)
+            end do
+            close(706)
 
-         open(unit=706,file='../lift-results/average_control_force.dat',
+            open(unit=706,file='../controller/'//trim(id_char)//'_lift-results/average_control_force.dat',
      &       status="replace",action="write",iostat=ierror)
-         if(ierror /= 0) stop "file 706 creation error"
-         do i=1,i_ts
-          write(706,713)avg_cfr(i,1:3)
-         end do
-         close(706)
-         deallocate(avg_cfr)
-        end if
+            if(ierror /= 0) stop "file 706 creation error"
+            do i=1,i_ts
+            write(706,713)avg_cfr(i,1:3)
+            end do
+            close(706)
+            deallocate(avg_cfr)
+            end if
 
-        if(i_ts.lt.nl_nc)then
-         write(*,715)'Condensing newtons_control_force.dat to ',i_ts,
+            if(i_ts.lt.nl_nc)then
+            write(*,715)'Condensing newtons_control_force.dat to ',i_ts,
      &               ' number of lines from ',nl_nc
-         allocate(nwt_cfr(i_ts,3),stat=status)
-         if(status /= 0) stop 'Error allocating nwt_cfr'
+            allocate(nwt_cfr(i_ts,3),stat=status)
+            if(status /= 0) stop 'Error allocating nwt_cfr'
 
-         open(unit=707,file='../lift-results/newtons_control_force.dat',
+            open(unit=707,file='../controller/'//trim(id_char)//'_lift-results/newtons_control_force.dat',
      &        status="old",action="read",iostat=ierror)
-         if(ierror /= 0) stop "file 707 creation error"
-         do i=1,i_ts
-          read(707,716)nwt_cfr(i,1:3)
-         end do
-         close(707)
+            if(ierror /= 0) stop "file 707 creation error"
+            do i=1,i_ts
+            read(707,716)nwt_cfr(i,1:3)
+            end do
+            close(707)
 
-         open(unit=707,file='../lift-results/newtons_control_force.dat',
+            open(unit=707,file='../controller/'//trim(id_char)//'_lift-results/newtons_control_force.dat',
      &        status="replace",action="write",iostat=ierror)
-         if(ierror /= 0) stop "file 707 creation error"
-         do i=1,i_ts
-          write(707,716)nwt_cfr(i,1:3)
-         end do
-         close(707)
-         deallocate(nwt_cfr)
-        end if
+            if(ierror /= 0) stop "file 707 creation error"
+            do i=1,i_ts
+            write(707,716)nwt_cfr(i,1:3)
+            end do
+            close(707)
+            deallocate(nwt_cfr)
+            end if
 
-        if(i_ts.lt.nl_cf)then
-         write(*,715)'Condensing xyzcf.dat to ',i_ts,
+            if(i_ts.lt.nl_cf)then
+            write(*,715)'Condensing xyzcf.dat to ',i_ts,
      &               ' number of lines from ',nl_cf
-         allocate(xyz_cfr(i_ts,3),stat=status)
-         if(status /= 0) stop 'Error allocating xyz_cfr'
+            allocate(xyz_cfr(i_ts,3),stat=status)
+            if(status /= 0) stop 'Error allocating xyz_cfr'
 
-         open(unit=708,file='../lift-results/xyzcf.dat',
+            open(unit=708,file='../controller/'//trim(id_char)//'_lift-results/xyzcf.dat',
      &        status="old",action="read",iostat=ierror)
-         if(ierror /= 0) stop "file 708 creation error"
-         do i=1,i_ts
-          read(708,713)xyz_cfr(i,1:3)
-         end do
-         close(708)
+            if(ierror /= 0) stop "file 708 creation error"
+            do i=1,i_ts
+            read(708,713)xyz_cfr(i,1:3)
+            end do
+            close(708)
 
-         open(unit=708,file='../lift-results/xyzcf.dat',
+            open(unit=708,file='../controller/'//trim(id_char)//'_lift-results/xyzcf.dat',
      &        status="replace",action="write",iostat=ierror)
-         if(ierror /= 0) stop "file 708 creation error"
-         do i=1,i_ts
-          write(708,713)xyz_cfr(i,1:3)
-         end do
-         close(708)
-         deallocate(xyz_cfr)
-        end if
+            if(ierror /= 0) stop "file 708 creation error"
+            do i=1,i_ts
+            write(708,713)xyz_cfr(i,1:3)
+            end do
+            close(708)
+            deallocate(xyz_cfr)
+            end if
 
 711   format(E22.15, 2x, E22.15, 2x, E22.15, 2x, E22.15)
 712   format(I6, 2x, E22.15, 2x, E22.15, 2x, E22.15)
@@ -1440,6 +1459,7 @@ c======================================================================
 715   format(A, I6, A, I6)
 716   format(I6, 2x, E22.15, 2x, E22.15, 2x, E22.15, 2x, E22.15)
 
+      end do    !mpid, bubble loop
         return
         end
 c======================================================================
