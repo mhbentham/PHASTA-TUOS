@@ -151,6 +151,7 @@ c======================================================================
       integer ioldyhistst,  ioldyhisten
       integer numoldyhistind
       integer indyhist
+      integer bub_id
 
       real*8  sumxcf_o, sumycf_o, sumzcf_o
       real*8  xcf_old_dummy
@@ -164,6 +165,7 @@ c======================================================================
       character*50:: lstepc
       character*2 :: id_char ! mpid, character for the bubble id
       logical dir_lf
+      logical dir_con
 
 
 
@@ -185,14 +187,30 @@ c======================================================================
 !       Check the existence of folder lift-results, create a new one if
 !       not
 !----------------------------------------------------------------------
+
+! ---------------------------------------------------------------------
+! check controller directory exists, for mpid directory structure
+      if(myrank.eq.master) then
+              inquire(directory ='../controller', exist=dir_con)
+              if (dir_con.eqv..False.) then
+                     write(*,*) 'controller directory does not exist.', 
+     &                             ' Create a new one!'
+                     call system('mkdir ../controller')
+              else   !controller dir alredy exists
+                     write(*,*) 'controller directory already exists'
+              end if !controller dir exists
+       end if ! rank .eq. master
+! ----------------------------------------------------------------------
+
       do bub_id=1, i_num_bubbles !for mpid a create directory for each bubble
+!       write(*,*) 'bub_id is', bub_id
         write(id_char, '(I0)') bub_id   !convert bub_id to character
         if(myrank.eq.master)then
             inquire(directory='../controller/'//trim(id_char)//'_lift-results',
      &          exist=dir_lf)
             if(dir_lf.eqv..False.) then
-            write(*,*) 'lift-results not found for bubble', id_char,
-     &                 '. Create a new one!'
+            write(*,*) 'lift-results not found for bubble ', id_char,
+     &                 '... Create a new one!'
             write(*,*)
             call system('mkdir ../controller/'//trim(id_char)//'_lift-results')
             else
