@@ -709,6 +709,13 @@ c
       if (myrank.eq.master) write(*,*) "iClrLiq is ", iClrLiq
       if (myrank.eq.master) write(*,*) "iCForz_where is ", iCForz_where
       if(iCForz.eq.1)then
+
+         if(iBT .eq. 0) then  ! if tracking
+            if (myrank.eq.master) then
+               write(*,*) 'bubble tracking must be enabled for pid controller'
+            end if
+         endif !call so that we have i_num_bubbles
+
          allocate (xcf(nstep(1)))
          allocate (ycf(nstep(1)))
          allocate (zcf(nstep(1)))
