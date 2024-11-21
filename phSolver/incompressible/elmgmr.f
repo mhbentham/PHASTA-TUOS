@@ -233,7 +233,7 @@ c!... arrays used in bubble tracking advanced analysis
 
 c!... assemble local element volume matrix and bubble information array
           if(iBT .eq. 1)  allocate( bub_info(npro,22) )
-          if(iCForz.eq.1) allocate( cf_var(npro,15)) ! MB, bubble controller
+          if(iCForz.eq.1) allocate( cf_var(npro,15, i_num_bubbles)) ! MB, bubble controller
           allocate(elemvol_local(npro))
           elemvol_local(:)=elemvol_global(iel:iel+npro-1)
 c
