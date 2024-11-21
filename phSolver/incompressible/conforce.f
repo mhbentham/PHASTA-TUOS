@@ -153,19 +153,19 @@ c======================================================================
       integer indyhist
       integer bub_id
 
-      real*8  sumxcf_o, sumycf_o, sumzcf_o
+      real*8  sumxcf_o(i_num_bubbles), sumycf_o(i_num_bubbles), sumzcf_o(i_num_bubbles)
       real*8  xcf_old_dummy
       real*8  ycf_old_dummy
       real*8  zcf_old_dummy
-      real*8  cf_restart_array(32)
-      real*8  oldcf_dt, oldcf_dtlset
+      real*8  cf_restart_array(32,i_num_bubbles) !mpid, extend dimensions
+      real*8  oldcf_dt, oldcf_dtlset 
 
       logical ycf_old_log
       logical ResCFexist      !to continue matts cf after a break in phasta
       character*50:: lstepc
       character*2 :: id_char ! mpid, character for the bubble id
       logical dir_lf
-      logical dir_con
+      logical dir_con             ! mpid
 
 
 
@@ -263,7 +263,7 @@ c======================================================================
          if(ResCFexist .eqv. .true.) then       !ResCFexist is true
 
             i_res_cf = 1
-            write(*,*)'for bubble ', bub_id            
+            write(*,*)'for bubble ', id_char            
             write(*,*)'restart_control_force'//trim(lstepc)//
      &                  '.datexists'
             write(*,*)'Continuing control force based on ',
@@ -273,36 +273,39 @@ c======================================================================
 
 
             call preprocess_lift_files(lstep)
+       if(myrank.eq.master) write(*,*) 'preprocessed_lift_files!' !mpid debug
 
-      OPEN(unit=741,file='../controller/'//trim(id_char)//'_lift-results/average_distance.dat',
+
+      OPEN(unit=7001+bub_id*10,file='../controller/'//trim(id_char)//'_lift-results/average_distance.dat',
      &  status="old",action="write",position="append",iostat=ierror)
       IF(ierror /= 0) STOP "Error opening file 741"
 
-      OPEN(unit=742,file='../controller/'//trim(id_char)//'_lift-results/average_velocity.dat',
+      OPEN(unit=7002+bub_id*10,file='../controller/'//trim(id_char)//'_lift-results/average_velocity.dat',
      &  status="old",action="write",position="append",iostat=ierror)
       IF(ierror /= 0) STOP "Error opening file 742"
      
-      OPEN(unit=743,file='../controller/'//trim(id_char)//'_lift-results/total_control_force.dat',
+      OPEN(unit=7003+bub_id*10,file='../controller/'//trim(id_char)//'_lift-results/total_control_force.dat',
      &  status="old",action="write",position="append",iostat=ierror)
       IF(ierror /= 0) STOP "Error opening file 743"
      
-      OPEN(unit=744,file='../controller/'//trim(id_char)//'_lift-results/historical_average.dat',
+      OPEN(unit=7004+bub_id*10,file='../controller/'//trim(id_char)//'_lift-results/historical_average.dat',
      &  status="old",action="write",position="append",iostat=ierror)
       IF(ierror /= 0) STOP "Error opening file 744"
      
-      OPEN(unit=745,file='../controller/'//trim(id_char)//'_lift-results/pos_vel_difference.dat',
+      OPEN(unit=7005+bub_id*10,file='../controller/'//trim(id_char)//'_lift-results/pos_vel_difference.dat',
      &  status="old",action="write",position="append",iostat=ierror)
       IF(ierror /= 0) STOP "Error opening file 745"
      
-      OPEN(unit=746,file='../controller/'//trim(id_char)//'_lift-results/average_control_force.dat',
+      OPEN(unit=7006+bub_id*10,file='../controller/'//trim(id_char)//'_lift-results/average_control_force.dat',
      &  status="old",action="write",position="append",iostat=ierror)
       IF(ierror /= 0) STOP "Error opening file 746"
      
-      OPEN(unit=747,file='../controller/'//trim(id_char)//'_lift-results/newtons_control_force.dat',
+      OPEN(unit=7007+bub_id*10,file='../controller/'//trim(id_char)//'_lift-results/newtons_control_force.dat',
      &  status="old",action="write",position="append",iostat=ierror)
       IF(ierror /= 0) STOP "Error opening file 747"
 
-      OPEN(unit=845,file='../controller/'//trim(id_char)//'_lift-results/restarts/'//
+      !mpid, below change 845 --> 8001+bub_id*10
+      OPEN(unit=8001+bub_id*10,file='../controller/'//trim(id_char)//'_lift-results/restarts/'//
      &                    'restart_control_force'//
      &                    trim(lstepc)//'.dat',
      &  status="old",action="read",iostat=ierror)
@@ -334,7 +337,7 @@ c======================================================================
               write(lstepc,'(i10.10)')lstep
             end if
 
-      OPEN(unit=846,file='../controller/'//trim(id_char)//'_lift-results/restarts/'//
+      OPEN(unit=8002+bub_id*10,file='../controller/'//trim(id_char)//'_lift-results/restarts/'//
      &             'restart_control_force'//trim(lstepc)//'.dat',
      &             status="new",action="write",iostat=ierror)
       IF(ierror /= 0) STOP "file 846 creation error"
@@ -355,97 +358,102 @@ c======================================================================
      &  write(*,*)'If this cf restart file is not ',
      &  'populated before exiting phasta'
       if(myrank.eq.master)write(*,*)'delete it and re-run'
-      CLOSE(846)
+      CLOSE(8002+bub_id*10)
 
-      OPEN(unit=741,file='../controller/'//trim(id_char)//'_lift-results/average_distance.dat',
+!      if(myrank.eq.master) write(*,*) 'first open statement' !debug
+      OPEN(unit=7001+bub_id*10,file='../controller/'//trim(id_char)//'_lift-results/average_distance.dat',
      &   status="new",action="write",iostat=ierror)
       IF(ierror /= 0) STOP "file 741 creation error"
+!      if(myrank.eq.master) write(*,*) 'first open statement' !debug
      
-      OPEN(unit=742,file='../controller/'//trim(id_char)//'_lift-results/average_velocity.dat',
+      OPEN(unit=7002+bub_id*10,file='../controller/'//trim(id_char)//'_lift-results/average_velocity.dat',
      &   status="new",action="write",iostat=ierror)
       IF(ierror /= 0) STOP "file 742 creation error"
      
-      OPEN(unit=743,file='../controller/'//trim(id_char)//'_lift-results/total_control_force.dat',
+      OPEN(unit=7003+bub_id*10,file='../controller/'//trim(id_char)//'_lift-results/total_control_force.dat',
      &   status="new",action="write",iostat=ierror)
       IF(ierror /= 0) STOP "file 743 creation error"
       
-      OPEN(unit=744,file='../controller/'//trim(id_char)//'_lift-results/historical_average.dat',
+      OPEN(unit=7004+bub_id*10,file='../controller/'//trim(id_char)//'_lift-results/historical_average.dat',
      &   status="new",action="write",iostat=ierror)
       IF(ierror /= 0) STOP "file 744 creation error"
       
-      OPEN(unit=745,file='../controller/'//trim(id_char)//'_lift-results/pos_vel_difference.dat',
+      OPEN(unit=7005+bub_id*10,file='../controller/'//trim(id_char)//'_lift-results/pos_vel_difference.dat',
      &   status="new",action="write",iostat=ierror)
       IF(ierror /= 0) STOP "file 745 creation error"
       
-      OPEN(unit=746,file='../controller/'//trim(id_char)//'_lift-results/average_control_force.dat',
+      OPEN(unit=7006+bub_id*10,file='../controller/'//trim(id_char)//'_lift-results/average_control_force.dat',
      &   status="new",action="write",iostat=ierror)
       IF(ierror /= 0) STOP "file 746 creation error"
      
-      OPEN(unit=747,file='../controller/'//trim(id_char)//'_lift-results/newtons_control_force.dat',
+      OPEN(unit=7007+bub_id*10,file='../controller/'//trim(id_char)//'_lift-results/newtons_control_force.dat',
      &   status="new",action="write",iostat=ierror)
       IF(ierror /= 0) STOP "file 747 creation error"
      
-      OPEN(unit=748,file='../controller/'//trim(id_char)//'_lift-results/xyzcf.dat',
+      OPEN(unit=7008+bub_id*10,file='../controller/'//trim(id_char)//'_lift-results/xyzcf.dat',
      &   status="new",action="write",iostat=ierror)
       IF(ierror /= 0) STOP "file 748 creation error"
 
         end if                                          !resCFexist
         end if                                          !myrank
-
+      !if(myrank.eq.master) write(*,*) 'about to call MPI_BARRIER' !debug
       call MPI_BARRIER(MPI_COMM_WORLD,ierr)
-
+      !if(myrank.eq.master) write(*,*) 'called MPI_BARRIER' !debug
+       !if(myrank.eq.master) write(*,*) 'about to call MPI_Bcast' !debug
       if (numpe > 1) call MPI_Bcast(i_res_cf,1,MPI_INTEGER,master,
      &                                MPI_COMM_WORLD,ierr)
-
+      !if(myrank.eq.master) write(*,*) 'called MPI_Bcast' !debug
 !--------------------------------------------------------------------
 !...initialize stuff for matts control algorithm, and read the history
 !for control force capability
       
       if(i_res_cf.eq.1)then
-
          if(myrank.eq.master)then
-            read(845,733)avgycf,avgycforceold,dy_new,avgyvelold,
-     &                     ddyvel,avgydistold,ydistideal,sumycf_o,
-     &                     avgxcf,avgxcforceold,dx_new,avgxvelold,
-     &                     ddxvel,avgxdistold,xdistideal,sumxcf_o,
-     &                     avgzcf,avgzcforceold,dz_new,avgzvelold,
-     &                     ddzvel,avgzdistold,zdistideal,sumzcf_o,
-     &                     epsilon_lsd,oldcf_dt,oldcf_dtlset,CFLfl_max,
-     &                     CFLbuint_max,CFLls_max,vf_now,C_int_adjust
-            close(845)
+!              if(myrank.eq.master) write(*,*) 'about to read 845'
+            read(8001+bub_id*10,733)avgycf(bub_id),
+     &      avgycforceold(bub_id),dy_new(bub_id),avgyvelold(bub_id),
+     &      ddyvel(bub_id),avgydistold(bub_id),ydistideal(bub_id),sumycf_o(id),
+     &      avgxcf(bub_id),avgxcforceold(bub_id),dx_new(bub_id),avgxvelold(bub_id),
+     &      ddxvel(bub_id),avgxdistold(bub_id),xdistideal(bub_id),sumxcf_o(bub_id),
+     &      avgzcf(bub_id),avgzcforceold(bub_id),dz_new(bub_id),avgzvelold(bub_id),
+     &      ddzvel(bub_id),avgzdistold(bub_id),zdistideal(bub_id),sumzcf_o(bub_id),
+     &      epsilon_lsd,oldcf_dt,oldcf_dtlset,CFLfl_max,
+     &      CFLbuint_max,CFLls_max,vf_now,C_int_adjust
+            close(8001+bub_id*10)
+!            if(myrank.eq.master) write(*,*) 'closed 845'
 
-            cf_restart_array(1)  = avgycf
-            cf_restart_array(2)  = avgycforceold
-            cf_restart_array(3)  = dy_new
-            cf_restart_array(4)  = avgyvelold
-            cf_restart_array(5)  = ddyvel
-            cf_restart_array(6)  = avgydistold
-            cf_restart_array(7)  = ydistideal
-            cf_restart_array(8)  = sumycf_o
-            cf_restart_array(9)  = avgxcf
-            cf_restart_array(10) = avgxcforceold
-            cf_restart_array(11) = dx_new
-            cf_restart_array(12) = avgxvelold
-            cf_restart_array(13) = ddxvel
-            cf_restart_array(14) = avgxdistold
-            cf_restart_array(15) = xdistideal
-            cf_restart_array(16) = sumxcf_o
-            cf_restart_array(17) = avgzcf
-            cf_restart_array(18) = avgzcforceold
-            cf_restart_array(19) = dz_new
-            cf_restart_array(20) = avgzvelold
-            cf_restart_array(21) = ddzvel
-            cf_restart_array(22) = avgzdistold
-            cf_restart_array(23) = zdistideal
-            cf_restart_array(24) = sumzcf_o
-            cf_restart_array(25) = epsilon_lsd
-            cf_restart_array(26) = oldcf_dt
-            cf_restart_array(27) = oldcf_dtlset
-            cf_restart_array(28) = CFLfl_max
-            cf_restart_array(29) = CFLbuint_max
-            cf_restart_array(30) = CFLls_max
-            cf_restart_array(31) = vf_now
-            cf_restart_array(32) = C_int_adjust
+            cf_restart_array(1,bub_id)  = avgycf(bub_id)
+            cf_restart_array(2,bub_id)  = avgycforceold(bub_id)
+            cf_restart_array(3,bub_id)  = dy_new(bub_id)
+            cf_restart_array(4,bub_id)  = avgyvelold(bub_id)
+            cf_restart_array(5,bub_id)  = ddyvel(bub_id)
+            cf_restart_array(6,bub_id)  = avgydistold(bub_id)
+            cf_restart_array(7,bub_id)  = ydistideal(bub_id)
+            cf_restart_array(8,bub_id)  = sumycf_o(bub_id)
+            cf_restart_array(9,bub_id)  = avgxcf(bub_id)
+            cf_restart_array(10,bub_id) = avgxcforceold(bub_id)
+            cf_restart_array(11,bub_id) = dx_new(bub_id)
+            cf_restart_array(12,bub_id) = avgxvelold(bub_id)
+            cf_restart_array(13,bub_id) = ddxvel(bub_id)
+            cf_restart_array(14,bub_id) = avgxdistold(bub_id)
+            cf_restart_array(15,bub_id) = xdistideal(bub_id)
+            cf_restart_array(16,bub_id) = sumxcf_o(bub_id)
+            cf_restart_array(17,bub_id) = avgzcf(bub_id)
+            cf_restart_array(18,bub_id) = avgzcforceold(bub_id)
+            cf_restart_array(19,bub_id) = dz_new(bub_id)
+            cf_restart_array(20,bub_id) = avgzvelold(bub_id)
+            cf_restart_array(21,bub_id) = ddzvel(bub_id)
+            cf_restart_array(22,bub_id) = avgzdistold(bub_id)
+            cf_restart_array(23,bub_id) = zdistideal(bub_id)
+            cf_restart_array(24,bub_id) = sumzcf_o(bub_id)
+            cf_restart_array(25,bub_id) = epsilon_lsd
+            cf_restart_array(26,bub_id) = oldcf_dt
+            cf_restart_array(27,bub_id) = oldcf_dtlset
+            cf_restart_array(28,bub_id) = CFLfl_max
+            cf_restart_array(29,bub_id) = CFLbuint_max
+            cf_restart_array(30,bub_id) = CFLls_max
+            cf_restart_array(31,bub_id) = vf_now
+            cf_restart_array(32,bub_id) = C_int_adjust
          end if !master
 
          if (numpe > 1) then
@@ -454,43 +462,47 @@ c======================================================================
          end if
 !...the following commands make sure that all the processors get the
 !same initial values of control force variables
+         
          if(myrank.ne.master) then
-            avgycf            = cf_restart_array(1)
-            avgycforceold     = cf_restart_array(2)
-            dy_new            = cf_restart_array(3)
-            avgyvelold        = cf_restart_array(4)
-            ddyvel            = cf_restart_array(5)
-            avgydistold       = cf_restart_array(6)
-            ydistideal        = cf_restart_array(7)
-            sumycf_o          = cf_restart_array(8)
-            avgxcf            = cf_restart_array(9)
-            avgxcforceold     = cf_restart_array(10)
-            dx_new            = cf_restart_array(11)
-            avgxvelold        = cf_restart_array(12)
-            ddxvel            = cf_restart_array(13)
-            avgxdistold       = cf_restart_array(14)
-            xdistideal        = cf_restart_array(15)
-            sumxcf_o          = cf_restart_array(16)
-            avgzcf            = cf_restart_array(17)
-            avgzcforceold     = cf_restart_array(18)
-            dz_new            = cf_restart_array(19)
-            avgzvelold        = cf_restart_array(20)
-            ddzvel            = cf_restart_array(21)
-            avgzdistold       = cf_restart_array(22)
-            zdistideal        = cf_restart_array(23)
-            sumzcf_o          = cf_restart_array(24)
-            epsilon_lsd       = cf_restart_array(25)
-            oldcf_dt          = cf_restart_array(26)
-            oldcf_dtlset      = cf_restart_array(27)
-            CFLfl_max         = cf_restart_array(28)
-            CFLbuint_max      = cf_restart_array(29)
-            CFLls_max         = cf_restart_array(30)
-            vf_now            = cf_restart_array(31)
-            C_int_adjust      = cf_restart_array(32)
+!           write(*,*) 'about to allocate pid variables...'
+            avgycf(bub_id)            = cf_restart_array(1,bub_id)
+            avgycforceold(bub_id)     = cf_restart_array(2,bub_id)
+            dy_new(bub_id)            = cf_restart_array(3,bub_id)
+            avgyvelold(bub_id)        = cf_restart_array(4,bub_id)
+            ddyvel(bub_id)            = cf_restart_array(5,bub_id)
+            avgydistold(bub_id)       = cf_restart_array(6,bub_id)
+            ydistideal(bub_id)        = cf_restart_array(7,bub_id)
+            sumycf_o(bub_id)          = cf_restart_array(8,bub_id)
+            avgxcf(bub_id)            = cf_restart_array(9,bub_id)
+            avgxcforceold(bub_id)     = cf_restart_array(10,bub_id)
+            dx_new(bub_id)            = cf_restart_array(11,bub_id)
+            avgxvelold(bub_id)        = cf_restart_array(12,bub_id)
+            ddxvel(bub_id)            = cf_restart_array(13,bub_id)
+            avgxdistold(bub_id)       = cf_restart_array(14,bub_id)
+            xdistideal(bub_id)        = cf_restart_array(15,bub_id)
+            sumxcf_o(bub_id)          = cf_restart_array(16,bub_id)
+            avgzcf(bub_id)            = cf_restart_array(17,bub_id)
+            avgzcforceold(bub_id)     = cf_restart_array(18,bub_id)
+            dz_new(bub_id)            = cf_restart_array(19,bub_id)
+            avgzvelold(bub_id)        = cf_restart_array(20,bub_id)
+            ddzvel(bub_id)            = cf_restart_array(21,bub_id)
+            avgzdistold(bub_id)       = cf_restart_array(22,bub_id)
+            zdistideal(bub_id)        = cf_restart_array(23,bub_id)
+            sumzcf_o(bub_id)          = cf_restart_array(24,bub_id)
+            epsilon_lsd       = cf_restart_array(25,bub_id)
+            oldcf_dt          = cf_restart_array(26,bub_id)
+            oldcf_dtlset      = cf_restart_array(27,bub_id)
+            CFLfl_max         = cf_restart_array(28,bub_id)
+            CFLbuint_max      = cf_restart_array(29,bub_id)
+            CFLls_max         = cf_restart_array(30,bub_id)
+            vf_now           = cf_restart_array(31,bub_id)
+            C_int_adjust      = cf_restart_array(32,bub_id)
+!            write(*,*) 'allocated mpid variables'
          end if
 
          if(myrank.eq.master)then
           write(*,*)
+          write(*,*) 'For bubble ', id_char
           write(*,*)'Using eps_lsd from cf restart file, ',
      &       'epsilon_lsd = ',  epsilon_lsd
           write(*,*)'Using dt from last cf restart file, ',
@@ -511,30 +523,30 @@ c======================================================================
          end if
 
       else !i_res_cf is 0 for the following algorithm
-         avgycf               = 0.0d0
-         avgycforceold        = 0.0d0
-         dy_new               = 0.0d0
-         avgyvelold           = 0.0d0
-         ddyvel               = 0.0d0
-         avgydistold          = 0.0d0
-         ydistideal           = 0.0d0
-         sumycf_o             = 0.0d0
-         avgxcf               = 0.0d0
-         avgxcforceold        = 0.0d0
-         dx_new               = 0.0d0
-         avgxvelold           = 0.0d0
-         ddxvel               = 0.0d0
-         avgxdistold          = 0.0d0
-         xdistideal           = 0.0d0
-         sumxcf_o             = 0.0d0
-         avgzcf               = 0.0d0
-         avgzcforceold        = 0.0d0
-         dz_new               = 0.0d0
-         avgzvelold           = 0.0d0
-         ddzvel               = 0.0d0
-         avgzdistold          = 0.0d0
-         zdistideal           = 0.0d0
-         sumzcf_o             = 0.0d0
+         avgycf(bub_id)               = 0.0d0
+         avgycforceold(bub_id)        = 0.0d0
+         dy_new(bub_id)               = 0.0d0
+         avgyvelold(bub_id)           = 0.0d0
+         ddyvel(bub_id)               = 0.0d0
+         avgydistold(bub_id)          = 0.0d0
+         ydistideal(bub_id)           = 0.0d0
+         sumycf_o(bub_id)             = 0.0d0
+         avgxcf(bub_id)               = 0.0d0
+         avgxcforceold(bub_id)        = 0.0d0
+         dx_new(bub_id)               = 0.0d0
+         avgxvelold(bub_id)           = 0.0d0
+         ddxvel(bub_id)               = 0.0d0
+         avgxdistold(bub_id)          = 0.0d0
+         xdistideal(bub_id)           = 0.0d0
+         sumxcf_o(bub_id)             = 0.0d0
+         avgzcf(bub_id)               = 0.0d0
+         avgzcforceold(bub_id)        = 0.0d0
+         dz_new(bub_id)               = 0.0d0
+         avgzvelold(bub_id)           = 0.0d0
+         ddzvel(bub_id)               = 0.0d0
+         avgzdistold(bub_id)          = 0.0d0
+         zdistideal(bub_id)           = 0.0d0
+         sumzcf_o(bub_id)             = 0.0d0
       end if !i_res_cf ends here
 
 !...allocate and initialize for matt's control force
@@ -545,12 +557,12 @@ c======================================================================
 
 !...need to find out how many lines in xyzcf.dat file
          if(myrank.eq.master)then
-          call lcounter(nxyzcflines,'../lift-results/xyzcf.dat')
+          call lcounter(nxyzcflines,'../controller/'//trim(id_char)//'_lift-results/xyzcf.dat')
           write(*,*)'The number of lines in xyzcf.dat is ',nxyzcflines
 
-          OPEN(unit=748,file='../lift-results/xyzcf.dat',
+          OPEN(unit=7008+bub_id*10,file='../controller/'//trim(id_char)//'_lift-results/xyzcf.dat',
      &      status="old",action="read",iostat=ierror)
-          IF(ierror /= 0) STOP "Error opening file 748"
+          IF(ierror /= 0) STOP "Error opening file 748, earlier"
 
          end if
 
@@ -586,13 +598,13 @@ c======================================================================
           do i=1,nxyzcflines
            if((i.ge.ioldyhistst).and.(i.le.ioldyhisten))then
             indyhist = indyhist + 1
-            read(748,738)xcf_old_dummy,ycf_old(indyhist),zcf_old_dummy
+            read(7008+bub_id*10,738)xcf_old_dummy,ycf_old(indyhist),zcf_old_dummy
            else
-            read(748,738)xcf_old_dummy,ycf_old_dummy,zcf_old_dummy
+            read(7008+bub_id*10,738)xcf_old_dummy,ycf_old_dummy,zcf_old_dummy
            endif
 
           enddo !i=1,nxyzcflines
-          close(748)
+          close(7008+bub_id*10)
          endif !(myrank.eq.master)
 
 !        if(myrank.eq.master) write(*,*) 'ycf_old is to be broadcast!'
@@ -604,18 +616,18 @@ c======================================================================
 
          if(myrank.eq.master)then
 
-          OPEN(unit=749,file='../lift-results/xyzcf_old.dat',
+          OPEN(unit=7009+bub_id*10,file='../controller/'//trim(id_char)//'_lift-results/xyzcf_old.dat',
      &      status="replace",action="write",iostat=ierror)
           IF(ierror /= 0) STOP "Error opening file 749"
 
           do i=1,numoldyhistind
-           write(749,738)xcf_old_dummy,ycf_old(i),zcf_old_dummy
+           write(7009+bub_id*10,738)xcf_old_dummy,ycf_old(i),zcf_old_dummy
           end do
-          close(749)
+          close(7009+bub_id*10)
 
-          OPEN(unit=748,file='../lift-results/xyzcf.dat',
+          OPEN(unit=7008+bub_id*10,file='../controller/'//trim(id_char)//'_lift-results/xyzcf.dat',
      &      status="old",action="write",position="append",iostat=ierror)
-          IF(ierror /= 0) STOP "Error opening file 748"
+          IF(ierror /= 0) STOP "Error opening file 748, later"
 
          end if !myrank
 
@@ -623,13 +635,13 @@ c======================================================================
 
        else !i_res_cf
 
-          avgxcf = 0.0d0
-          avgycf = 0.0d0
-          avgzcf = 0.0d0
+          avgxcf(bub_id) = 0.0d0
+          avgycf(bub_id) = 0.0d0
+          avgzcf(bub_id) = 0.0d0
 
-          dx_new = 0.0d0
-          dy_new = 0.0d0
-          dz_new = 0.0d0
+          dx_new(bub_id) = 0.0d0
+          dy_new(bub_id) = 0.0d0
+          dz_new(bub_id) = 0.0d0
 
       end if !i_res_cf
 
@@ -668,10 +680,14 @@ c!solver.inp.
 c!
 c! Jun, Fall 2014
 c!----------------------------------------------------------------------
+      use bub_track
       include "common.h"
       include "mpif.h"
       include "auxmpi.h"
 
+!       real*8, allocatable :: xdistancesum(:)
+
+!       allocate(xdistancesum(i_num_bubbles))
 
 !       initialize values for control force before loop over
 !       element-blocks
@@ -691,76 +707,104 @@ c!----------------------------------------------------------------------
       bubvolsum       = 0.0d0
       denssum         = 0.0d0
       nzinBsum        = 0
-   
-      dx_new = avgxdistold - xdistideal
-      dy_new = avgydistold - ydistideal
-      dz_new = avgzdistold - zdistideal
-   
-      if(iCForz_where .eq. 1) then !apply cf to whole domain
-         y_c_f = ycfcoeff(1) * avgycf +
-     &           ycfcoeff(2) * ( avgycforceold +
-     &           ycfcoeff(3) * dy_new +
-     &           ycfcoeff(4) * avgyvelold +
-     &           ycfcoeff(5) * ddyvel +
-     &           ycfcoeff(6) * dy_new*abs(dy_new) +
-     &           ycfcoeff(7) * dy_new*dy_new*dy_new +
-     &           ycfcoeff(8) * avgyvelold*abs(avgyvelold) +
-     &           ycfcoeff(9) * avgyvelold*avgyvelold*avgyvelold )
-     
-         x_c_f = xcfcoeff(1) * avgxcf +
-     &           xcfcoeff(2) * ( avgxcforceold +
-     &           xcfcoeff(3) * dx_new +
-     &           xcfcoeff(4) * avgxvelold +
-     &           xcfcoeff(5) * ddxvel +
-     &           xcfcoeff(6) * dx_new*abs(dx_new) +
-     &           xcfcoeff(7) * dx_new*dx_new*dx_new +
-     &           xcfcoeff(8) * avgxvelold*abs(avgxvelold) +
-     &           xcfcoeff(9) * avgxvelold*avgxvelold*avgxvelold ) +
-     &           xcfcoeff(10)* (dy_new-y_drag_flip) * 
-     &                          abs(dy_new-y_drag_flip)
 
-         z_c_f = zcfcoeff(1) * avgzcf +
-     &           zcfcoeff(2) * (avgzcforceold +
-     &           zcfcoeff(3) * dz_new +
-     &           zcfcoeff(4) * avgzvelold +
-     &           zcfcoeff(5) * ddzvel +
-     &           zcfcoeff(6) * dz_new*abs(dz_new) +
-     &           zcfcoeff(7) * dz_new*dz_new*dz_new +
-     &           zcfcoeff(8) * avgzvelold*abs(avgzvelold) +
-     &           zcfcoeff(9) * avgzvelold*avgzvelold*avgzvelold )
+       do j = 1, i_num_bubbles
+        xdistancesum(j)    = 0.0d0
+        ydistancesum(j)    = 0.0d0
+        zdistancesum(j)    = 0.0d0
+        xvelsum(j)         = 0.0d0
+        yvelsum(j)         = 0.0d0
+        zvelsum(j)         = 0.0d0
+        xcforcesum(j)      = 0.0d0
+        ycforcesum(j)      = 0.0d0
+        zcforcesum(j)      = 0.0d0
+        xforcenewtsum(j)   = 0.0d0
+        yforcenewtsum(j)    = 0.0d0
+        zforcenewtsum(j)    = 0.0d0
+        velwghtsum(j)       = 0.0d0
+        bubvolsum(j)        = 0.0d0
+        denssum(j)          = 0.0d0
+        nzinBsum(j)         = 0
+
+        dx_new(j) = avgxdistold(j) - xdistideal(j)
+        dy_new(j) = avgydistold(j) - ydistideal(j)
+        dz_new(j) = avgzdistold(j) - zdistideal(j)
+       end do
+! magnus - old code:
+      !dx_new = avgxdistold - xdistideal
+      !dy_new = avgydistold - ydistideal
+      !dz_new = avgzdistold - zdistideal
+
+! magnus - ignore this implementation to the whole domain  
+      if(iCForz_where .eq. 1) then !apply cf to whole domain
+        if (myrank.eq.master) write(*,*) 'The mpid controller does not work when applied to ',
+     &        'the whole domain'   
+!         y_c_f = ycfcoeff(1) * avgycf +
+!     &           ycfcoeff(2) * ( avgycforceold +
+!     &           ycfcoeff(3) * dy_new +
+!     &           ycfcoeff(4) * avgyvelold +
+!     &           ycfcoeff(5) * ddyvel +
+!     &           ycfcoeff(6) * dy_new*abs(dy_new) +
+!     &           ycfcoeff(7) * dy_new*dy_new*dy_new +
+!     &           ycfcoeff(8) * avgyvelold*abs(avgyvelold) +
+!     &           ycfcoeff(9) * avgyvelold*avgyvelold*avgyvelold )
+     
+!         x_c_f = xcfcoeff(1) * avgxcf +
+!     &           xcfcoeff(2) * ( avgxcforceold +
+!     &           xcfcoeff(3) * dx_new +
+!     &           xcfcoeff(4) * avgxvelold +
+!     &           xcfcoeff(5) * ddxvel +
+!     &           xcfcoeff(6) * dx_new*abs(dx_new) +
+!     &           xcfcoeff(7) * dx_new*dx_new*dx_new +
+!     &           xcfcoeff(8) * avgxvelold*abs(avgxvelold) +
+!     &           xcfcoeff(9) * avgxvelold*avgxvelold*avgxvelold ) +
+!     &           xcfcoeff(10)* (dy_new-y_drag_flip) * 
+!     &                          abs(dy_new-y_drag_flip)
+
+!        z_c_f = zcfcoeff(1) * avgzcf +
+!    &           zcfcoeff(2) * (avgzcforceold +
+!     &           zcfcoeff(3) * dz_new +
+!     &           zcfcoeff(4) * avgzvelold +
+!     &           zcfcoeff(5) * ddzvel +
+!     &           zcfcoeff(6) * dz_new*abs(dz_new) +
+!     &           zcfcoeff(7) * dz_new*dz_new*dz_new +
+!     &           zcfcoeff(8) * avgzvelold*abs(avgzvelold) +
+!     &           zcfcoeff(9) * avgzvelold*avgzvelold*avgzvelold )
    
       else !apply cf to only bubble
-         y_c_f = ycfcoeff(1) * avgycf +
-     &                ycfcoeff(2) * ( avgycforceold -
-     &                ycfcoeff(3) * dy_new -
-     &                ycfcoeff(4) * avgyvelold -
-     &                ycfcoeff(5) * ddyvel -
-     &                ycfcoeff(6) * dy_new*abs(dy_new) -
-     &                ycfcoeff(7) * dy_new*dy_new*dy_new -
-     &                ycfcoeff(8) * avgyvelold*abs(avgyvelold) -
-     &                ycfcoeff(9) * avgyvelold*avgyvelold*avgyvelold )
+       do bub_id=1, i_num_bubbles
+         y_c_f(bub_id) = ycfcoeff(1) * avgycf(bub_id) +
+     &                ycfcoeff(2) * ( avgycforceold(bub_id) -
+     &                ycfcoeff(3) * dy_new(bub_id) -
+     &                ycfcoeff(4) * avgyvelold(bub_id) -
+     &                ycfcoeff(5) * ddyvel(bub_id) -
+     &                ycfcoeff(6) * dy_new(bub_id)*abs(dy_new(bub_id)) -
+     &                ycfcoeff(7) * dy_new(bub_id)*dy_new(bub_id)*dy_new(bub_id) -
+     &                ycfcoeff(8) * avgyvelold(bub_id)*abs(avgyvelold(bub_id)) -
+     &                ycfcoeff(9) * avgyvelold(bub_id)*avgyvelold(bub_id)*avgyvelold(bub_id))
    
-            x_c_f = xcfcoeff(1) * avgxcf +
-     &                xcfcoeff(2) * ( avgxcforceold -
-     &                xcfcoeff(3) * dx_new -
-     &                xcfcoeff(4) * avgxvelold -
-     &                xcfcoeff(5) * ddxvel -
-     &                xcfcoeff(6) * dx_new*abs(dx_new) -
-     &                xcfcoeff(7) * dx_new*dx_new*dx_new -
-     &                 xcfcoeff(8) * avgxvelold*abs(avgxvelold) -
-     &                xcfcoeff(9) * avgxvelold*avgxvelold*avgxvelold ) -
-     &                xcfcoeff(10)* (dy_new-y_drag_flip) * 
-     &                              abs(dy_new-y_drag_flip)
+            x_c_f(bub_id) = xcfcoeff(1) * avgxcf(bub_id) +
+     &                xcfcoeff(2) * ( avgxcforceold(bub_id) -
+     &                xcfcoeff(3) * dx_new(bub_id) -
+     &                xcfcoeff(4) * avgxvelold(bub_id) -
+     &                xcfcoeff(5) * ddxvel(bub_id) -
+     &                xcfcoeff(6) * dx_new(bub_id)*abs(dx_new(bub_id)) -
+     &                xcfcoeff(7) * dx_new(bub_id)*dx_new(bub_id)*dx_new(bub_id) -
+     &                xcfcoeff(8) * avgxvelold(bub_id)*abs(avgxvelold(bub_id)) -
+     &                xcfcoeff(9) * avgxvelold(bub_id)*avgxvelold(bub_id)*avgxvelold(bub_id)) -
+     &                xcfcoeff(10)* (dy_new(bub_id)-y_drag_flip) * 
+     &                              abs(dy_new(bub_id)-y_drag_flip)
 
-            z_c_f = zcfcoeff(1) * avgzcf +
-     &                zcfcoeff(2) * ( avgzcforceold -
-     &                zcfcoeff(3) * dz_new -
-     &                zcfcoeff(4) * avgzvelold -
-     &                zcfcoeff(5) * ddzvel -
-     &                zcfcoeff(6) * dz_new*abs(dz_new) -
-     &                zcfcoeff(7) * dz_new*dz_new*dz_new -
-     &                zcfcoeff(8) * avgzvelold*abs(avgzvelold) -
-     &                zcfcoeff(9) * avgzvelold*avgzvelold*avgzvelold )
+            z_c_f(bub_id) = zcfcoeff(1) * avgzcf(bub_id) +
+     &                zcfcoeff(2) * (avgzcforceold(bub_id) -
+     &                zcfcoeff(3) * dz_new(bub_id) -
+     &                zcfcoeff(4) * avgzvelold(bub_id) -
+     &                zcfcoeff(5) * ddzvel(bub_id) -
+     &                zcfcoeff(6) * dz_new(bub_id)*abs(dz_new(bub_id)) -
+     &                zcfcoeff(7) * dz_new(bub_id)*dz_new(bub_id)*dz_new(bub_id) -
+     &                zcfcoeff(8) * avgzvelold(bub_id)*abs(avgzvelold(bub_id)) -
+     &                zcfcoeff(9) * avgzvelold(bub_id)*avgzvelold(bub_id)*avgzvelold(bub_id))
+       end do        ! cycle through bubble ids
       end if !iCForz_where
 
       end !end control force calculating
@@ -780,25 +824,27 @@ c======================================================================
    
    
       do i = 1, npro
-         xdistancesum = xdistancesum + cf_var(i,1)
-         ydistancesum = ydistancesum + cf_var(i,2)
-         zdistancesum = zdistancesum + cf_var(i,3)
-         xvelsum      = xvelsum + cf_var(i,4)
-         yvelsum      = yvelsum + cf_var(i,5)
-         zvelsum      = zvelsum + cf_var(i,6)
-         xcforcesum   = xcforcesum + cf_var(i,7)
-         ycforcesum   = ycforcesum + cf_var(i,8)
-         zcforcesum   = zcforcesum + cf_var(i,9)
-         xforcenewtsum= xforcenewtsum + cf_var(i,10)
-         yforcenewtsum= yforcenewtsum + cf_var(i,11)
-         zforcenewtsum= zforcenewtsum + cf_var(i,12)
-         velwghtsum   = velwghtsum + cf_var(i,13)
-         bubvolsum    = bubvolsum + cf_var(i,14)
-         denssum      = denssum + cf_var(i,15)
-         if(cf_var(i,2).ne.0.0d0)then
-            nzinBsum  = nzinBsum + 1
+       do j=1, i_num_bubbles       ! mpid
+         xdistancesum(j) = xdistancesum(j) + cf_var(i,1,j)
+         ydistancesum(j) = ydistancesum(j) + cf_var(i,2,j)
+         zdistancesum(j) = zdistancesum(j) + cf_var(i,3,j)
+         xvelsum(j)      = xvelsum(j) + cf_var(i,4,j)
+         yvelsum(j)      = yvelsum(j) + cf_var(i,5,j)
+         zvelsum(j)      = zvelsum(j) + cf_var(i,6,j)
+         xcforcesum(j)   = xcforcesum(j) + cf_var(i,7,j)
+         ycforcesum(j)   = ycforcesum(j) + cf_var(i,8,j)
+         zcforcesum(j)   = zcforcesum(j) + cf_var(i,9,j)
+         xforcenewtsum(j)= xforcenewtsum(j) + cf_var(i,10,j)
+         yforcenewtsum(j)= yforcenewtsum(j) + cf_var(i,11,j)
+         zforcenewtsum(j)= zforcenewtsum(j) + cf_var(i,12,j)
+         velwghtsum(j)   = velwghtsum(j) + cf_var(i,13,j)
+         bubvolsum(j)    = bubvolsum(j) + cf_var(i,14,j)
+         denssum(j)      = denssum(j) + cf_var(i,15,j)
+         if(cf_var(i,2,j).ne.0.0d0)then
+            nzinBsum(j)  = nzinBsum(j) + 1
          end if
-      end do
+       end do ! mpid controller
+      end do  ! elements
    
       end     !control force assembly
 c======================================================================
@@ -817,87 +863,90 @@ c======================================================================
       include "mpif.h"
       include "auxmpi.h"
    
+      do j=1, i_num_bubbles
          if (numpe > 1) then
-            call MPI_ALLREDUCE (xdistancesum, totalxdist, 1,
+            call MPI_ALLREDUCE (xdistancesum(j), totalxdist(j), 1,
      &           MPI_DOUBLE_PRECISION,MPI_SUM, MPI_COMM_WORLD,ierr)
-            call MPI_ALLREDUCE (ydistancesum, totalydist, 1,
+            call MPI_ALLREDUCE (ydistancesum(j), totalydist(j), 1,
      &           MPI_DOUBLE_PRECISION,MPI_SUM, MPI_COMM_WORLD,ierr)
-            call MPI_ALLREDUCE (zdistancesum, totalzdist, 1,
+            call MPI_ALLREDUCE (zdistancesum(j), totalzdist(j), 1,
      &           MPI_DOUBLE_PRECISION,MPI_SUM, MPI_COMM_WORLD,ierr)
-            call MPI_ALLREDUCE (nzinBsum, ntotnzinB, 1,
+            call MPI_ALLREDUCE (nzinBsum(j), ntotnzinB(j), 1,
      &           MPI_INTEGER,MPI_SUM, MPI_COMM_WORLD,ierr)
-            call MPI_ALLREDUCE (velwghtsum, totalvelwght, 1,
+            call MPI_ALLREDUCE (velwghtsum(j), totalvelwght(j), 1,
      &           MPI_DOUBLE_PRECISION,MPI_SUM, MPI_COMM_WORLD,ierr)
-            call MPI_ALLREDUCE (xvelsum, totalxvel, 1,
+            call MPI_ALLREDUCE (xvelsum(j), totalxvel(j), 1,
      &           MPI_DOUBLE_PRECISION,MPI_SUM, MPI_COMM_WORLD,ierr)
-            call MPI_ALLREDUCE (yvelsum, totalyvel, 1,
+            call MPI_ALLREDUCE (yvelsum(j), totalyvel(j), 1,
      &           MPI_DOUBLE_PRECISION,MPI_SUM, MPI_COMM_WORLD,ierr)
-            call MPI_ALLREDUCE (zvelsum, totalzvel, 1,
+            call MPI_ALLREDUCE (zvelsum(j), totalzvel(j), 1,
      &           MPI_DOUBLE_PRECISION,MPI_SUM, MPI_COMM_WORLD,ierr)
-            call MPI_ALLREDUCE (xcforcesum, totalxcforce, 1,
+            call MPI_ALLREDUCE (xcforcesum(j), totalxcforce(j), 1,
      &           MPI_DOUBLE_PRECISION,MPI_SUM, MPI_COMM_WORLD,ierr)
-            call MPI_ALLREDUCE (ycforcesum, totalycforce, 1,
+            call MPI_ALLREDUCE (ycforcesum(j), totalycforce(j), 1,
      &           MPI_DOUBLE_PRECISION,MPI_SUM, MPI_COMM_WORLD,ierr)
-            call MPI_ALLREDUCE (zcforcesum, totalzcforce, 1,
+            call MPI_ALLREDUCE (zcforcesum(j), totalzcforce(j), 1,
      &           MPI_DOUBLE_PRECISION,MPI_SUM, MPI_COMM_WORLD,ierr)
-            call MPI_ALLREDUCE (bubvolsum, totbubvol, 1,
+            call MPI_ALLREDUCE (bubvolsum(j), totbubvol(j), 1,
      &           MPI_DOUBLE_PRECISION,MPI_SUM, MPI_COMM_WORLD,ierr)
-            call MPI_ALLREDUCE (denssum, totbubdens, 1,
+            call MPI_ALLREDUCE (denssum(j), totbubdens(j), 1,
      &           MPI_DOUBLE_PRECISION,MPI_SUM, MPI_COMM_WORLD,ierr)
-            call MPI_ALLREDUCE (yforcenewtsum, totyfnewtsum, 1,
+            call MPI_ALLREDUCE (yforcenewtsum(j), totyfnewtsum(j), 1,
      &           MPI_DOUBLE_PRECISION,MPI_SUM, MPI_COMM_WORLD,ierr)
-            call MPI_ALLREDUCE (xforcenewtsum, totxfnewtsum, 1,
+            call MPI_ALLREDUCE (xforcenewtsum(j), totxfnewtsum(j), 1,
      &           MPI_DOUBLE_PRECISION,MPI_SUM, MPI_COMM_WORLD,ierr)
-            call MPI_ALLREDUCE (zforcenewtsum, totzfnewtsum, 1,
+            call MPI_ALLREDUCE (zforcenewtsum(j), totzfnewtsum(j), 1,
      &           MPI_DOUBLE_PRECISION,MPI_SUM, MPI_COMM_WORLD,ierr)
 
-            ycfnewtons = totyfnewtsum
-            xcfnewtons = totxfnewtsum
-            zcfnewtons = totzfnewtsum
+            ycfnewtons(j) = totyfnewtsum(j)
+            xcfnewtons(j) = totxfnewtsum(j)
+            zcfnewtons(j) = totzfnewtsum(j)
 
-            totalycforce = totalycforce / totbubvol
-            totalxcforce = totalxcforce / totbubvol
-            totalzcforce = totalzcforce / totbubvol
+            totalycforce(j) = totalycforce(j) / totbubvol(j)
+            totalxcforce(j) = totalxcforce(j) / totbubvol(j)
+            totalzcforce(j) = totalzcforce(j) / totbubvol(j)
 
-            avgydistance = totalydist / real(ntotnzinB)
-            avgxdistance = totalxdist / real(ntotnzinB)
-            avgzdistance = totalzdist / real(ntotnzinB)
+            avgydistance(j) = totalydist(j) / real(ntotnzinB(j))
+            avgxdistance(j) = totalxdist(j) / real(ntotnzinB(j))
+            avgzdistance(j) = totalzdist(j) / real(ntotnzinB(j))
 
-            avgyvel = totalyvel / totalvelwght
-            avgxvel = totalxvel / totalvelwght
-            avgzvel = totalzvel / totalvelwght
+            avgyvel(j) = totalyvel(j) / totalvelwght(j)
+            avgxvel(j) = totalxvel(j) / totalvelwght(j)
+            avgzvel(j) = totalzvel(j) / totalvelwght(j)
 
-            avgycforce = totalycforce
-            avgxcforce = totalxcforce
-            avgzcforce = totalzcforce
+            avgycforce(j) = totalycforce(j)
+            avgxcforce(j) = totalxcforce(j)
+            avgzcforce(j) = totalzcforce(j)
 
          else !for single processor case
 
-            avgydistance = ydistancesum / real(nzinBsum)
-            avgxdistance = xdistancesum / real(nzinBsum)
-            avgzdistance = zdistancesum / real(nzinBsum)
-            avgyvel = yvelsum / velwghtsum
-            avgxvel = xvelsum / velwghtsum
-            avgzvel = zvelsum / velwghtsum
-            avgycforce = ycforcesum / bubvolsum
-            avgxcforce = xcforcesum / bubvolsum
-            avgzcforce = zcforcesum / bubvolsum
+            avgydistance(j) = ydistancesum(j) / real(nzinBsum(j))
+            avgxdistance(j) = xdistancesum(j) / real(nzinBsum(j))
+            avgzdistance(j) = zdistancesum(j) / real(nzinBsum(j))
+            avgyvel(j) = yvelsum(j) / velwghtsum(j)
+            avgxvel(j) = xvelsum(j) / velwghtsum(j)
+            avgzvel(j) = zvelsum(j) / velwghtsum(j)
+            avgycforce(j) = ycforcesum(j) / bubvolsum(j)
+            avgxcforce(j) = xcforcesum(j) / bubvolsum(j)
+            avgzcforce(j) = zcforcesum(j) / bubvolsum(j)
 
             write(*,*)'Control force implemented!'
             write(*,*)'mpi is not used'
+            
+            write(*,*)'For bubble ', j
+            write(*,*)'average y distance: ', avgydistance(j)
+            write(*,*)'average x distance: ', avgxdistance(j)
+            write(*,*)'average z distance: ', avgzdistance(j)
 
-            write(*,*)'average y distance: ', avgydistance
-            write(*,*)'average x distance: ', avgxdistance
-            write(*,*)'average z distance: ', avgzdistance
+            write(*,*)'average y velocity: ', avgyvel(j)
+            write(*,*)'average x velocity: ', avgxvel(j)
+            write(*,*)'average z velocity: ', avgzvel(j)
 
-            write(*,*)'average y velocity: ', avgyvel
-            write(*,*)'average x velocity: ', avgxvel
-            write(*,*)'average z velocity: ', avgzvel
-
-            write(*,*)'average y control force: ', avgycforce
-            write(*,*)'average x control force: ', avgxcforce
-            write(*,*)'average z control force: ', avgzcforce
+            write(*,*)'average y control force: ', avgycforce(j)
+            write(*,*)'average x control force: ', avgxcforce(j)
+            write(*,*)'average z control force: ', avgzcforce(j)
          endif
+       end do ! mpid, bubble cycle
 
       end !end MPI processing
 c======================================================================
@@ -928,6 +977,8 @@ c======================================================================
       real*8    elemvol_local(ibksiz)
       real*8    epsilon_ls_tmp,       denswght
 
+      integer bub_id
+
 
       cf_var = zero
       rholiq=datmat(1,1,1)
@@ -949,57 +1000,67 @@ c======================================================================
       do i=1,npro
          if(Sclr(i).le.epsilon_ls_tmp) then
             id = int(bub_info(i,11))    !mpid
-            if (id .eq. 1) then !mpid
-                cf_var(i,1) = xx(i,1)
-                cf_var(i,2) = xx(i,2)
-                cf_var(i,3) = xx(i,3)
-                cf_var(i,4) = u1(i)*(rholiq-rho(i))*elemvol_local(i)
-                cf_var(i,5) = u2(i)*(rholiq-rho(i))*elemvol_local(i)
-                cf_var(i,6) = u3(i)*(rholiq-rho(i))*elemvol_local(i)
-                cf_var(i,7) = x_c_f*elemvol_local(i)
-                cf_var(i,8) = y_c_f*elemvol_local(i)
-                cf_var(i,9) = z_c_f*elemvol_local(i)
-                cf_var(i,13)= (rholiq-rho(i))*elemvol_local(i)
-                cf_var(i,14)= elemvol_local(i)
-                cf_var(i,15)= rho(i)*elemvol_local(i)*
+            do bub_id=1, i_num_bubbles
+
+              if (id .eq. bub_id) then !mpid
+                     cf_var(i,1,id) = xx(i,1)
+                     cf_var(i,2,id) = xx(i,2)
+                     cf_var(i,3,id) = xx(i,3)
+                     cf_var(i,4,id) = u1(i)*(rholiq-rho(i))*elemvol_local(i)
+                     cf_var(i,5,id) = u2(i)*(rholiq-rho(i))*elemvol_local(i)
+                     cf_var(i,6,id) = u3(i)*(rholiq-rho(i))*elemvol_local(i)
+                     cf_var(i,7,id) = x_c_f(id)*elemvol_local(i)
+                     cf_var(i,8,id) = y_c_f(id)*elemvol_local(i)
+                     cf_var(i,9,id) = z_c_f(id)*elemvol_local(i)
+                     cf_var(i,13,id)= (rholiq-rho(i))*elemvol_local(i)
+                     cf_var(i,14,id)= elemvol_local(i)
+                     cf_var(i,15,id)= rho(i)*elemvol_local(i)*
      &                     ((rholiq-rho(i))/(rholiq-rhogas))
-           !velocity in bubble need be averaged by
-           !(rho_l-rho(i))*vol(i)
-           !densty in bub wghtd by elment vol and denswght
-            end if !mpid, check element id
+              !velocity in bubble need be averaged by
+              !(rho_l-rho(i))*vol(i)
+              !densty in bub wghtd by elment vol and denswght
+              end if !mpid, check element id
+              end do
          end if
       end do
 
       !mpid note, ignore application to the whole domain for now
       if(iCForz_where .eq. 1) then !apply cf to whole domain
-         do i=1,npro
-            sforce(i,1) = sforce(i,1) + x_c_f
-            sforce(i,2) = sforce(i,2) + y_c_f
-            sforce(i,3) = sforce(i,3) + z_c_f
-            if(Sclr(i).le.epsilon_ls_tmp)then
+       write(*,*) 'mpid controller does not work with the whole domain option'
+!----------------------------------------------------------------------
+!"This block is ignored for the mpid controller, as the controller
+!must be applied to each individual bubble" - magnus, Oct 2024
+!         do i=1,npro
+!            sforce(i,1) = sforce(i,1) + x_c_f
+!            sforce(i,2) = sforce(i,2) + y_c_f
+!            sforce(i,3) = sforce(i,3) + z_c_f
+!            if(Sclr(i).le.epsilon_ls_tmp)then
             !Extract the Drag Force, Lift Force, and Z Force in [N]
-              cf_var(i,10)=(rholiq-rho(i))*
-     &                        elemvol_local(i)*(datmat(1,5,1)+x_c_f)
-              cf_var(i,11)=(rholiq-rho(i))*
-     &                        elemvol_local(i)*(datmat(2,5,1)+y_c_f)
-              cf_var(i,12)=(rholiq-rho(i))*
-     &                        elemvol_local(i)*(datmat(3,5,1)+z_c_f)
-            end if
-         end do
+!              cf_var(i,10)=(rholiq-rho(i))*
+!     &                        elemvol_local(i)*(datmat(1,5,1)+x_c_f)
+!              cf_var(i,11)=(rholiq-rho(i))*
+!     &                        elemvol_local(i)*(datmat(2,5,1)+y_c_f)
+!              cf_var(i,12)=(rholiq-rho(i))*
+!     &                        elemvol_local(i)*(datmat(3,5,1)+z_c_f)
+!            end if
+!         end do
+!----------------------------------------------------------------------
       else !apply cf inside bubble
          do i = 1, npro
             if(Sclr(i).le.epsilon_ls_tmp)then
                 id = int(bub_info(i,11))    !mpid
-                if (id .eq. 1) then !mpid
-                    denswght=(rholiq-rho(i))/(rholiq-rhogas)
-                    sforce(i,1)= sforce(i,1) + x_c_f*denswght/rho(i)
-                    sforce(i,2)= sforce(i,2) + y_c_f*denswght/rho(i)
-                    sforce(i,3)= sforce(i,3) + z_c_f*denswght/rho(i)
-                    !Extract the Force in [N]
-                    cf_var(i,10)=x_c_f*denswght*elemvol_local(i)
-                    cf_var(i,11)=y_c_f*denswght*elemvol_local(i)
-                    cf_var(i,12)=z_c_f*denswght*elemvol_local(i)
-                end if
+                do bub_id=1, i_num_bubbles
+                     if (id .eq. bub_id) then !mpid
+                      denswght=(rholiq-rho(i))/(rholiq-rhogas)
+                      sforce(i,1)= sforce(i,1) + x_c_f(id)*denswght/rho(i)
+                      sforce(i,2)= sforce(i,2) + y_c_f(id)*denswght/rho(i)
+                      sforce(i,3)= sforce(i,3) + z_c_f(id)*denswght/rho(i)
+                      !Extract the Force in [N]
+                      cf_var(i,10,id)=x_c_f(id)*denswght*elemvol_local(i)
+                      cf_var(i,11,id)=y_c_f(id)*denswght*elemvol_local(i)
+                      cf_var(i,12,id)=z_c_f(id)*denswght*elemvol_local(i)
+                     end if
+                end do
             end if
          end do
       end if !iCForz_where
@@ -1025,58 +1086,63 @@ c!----------------------------------------------------------------------
       include "mpif.h"
       include "auxmpi.h"
 
-      real*8 sumxcf, sumycf, sumzcf
-      real*8 sumxcf_o, sumycf_o, sumzcf_o
+      real*8 sumxcf, sumycf
+      real*8 sumzcf
+      real*8 sumxcf_o(i_num_bubbles), sumycf_o(i_num_bubbles)
+      real*8 sumzcf_o(i_num_bubbles)
       real*8 sumycf_old
 
       integer numoldtsyhist
       integer numnewtsyhist
       integer ixcf, iycf, izcf
+      integer bub_id
 
       logical ycf_old_log
       character*50:: lstepc
+      character*2 :: id_char
 
 !        if(myrank.eq.master) write(*,*) 'numoldyhistind = ',
 !     &                                   numoldyhistind
+      do j=1, i_num_bubbles
       if((i_res_cf .eq. 0).and.(istp .eq. 1))then
 
-          ydistideal = avgydistance
-          xdistideal = avgxdistance
-          zdistideal = avgzdistance
+          ydistideal(j) = avgydistance(j)
+          xdistideal(j) = avgxdistance(j)
+          zdistideal(j) = avgzdistance(j)
 
       endif
 
-      avgydistold = avgydistance
-      avgxdistold = avgxdistance
-      avgzdistold = avgzdistance
+      avgydistold(j) = avgydistance(j)
+      avgxdistold(j) = avgxdistance(j)
+      avgzdistold(j) = avgzdistance(j)
 
       if((i_res_cf .eq. 0).and.(istp .eq. 1))then
-          ddyvel = 0.0d0
-          ddxvel = 0.0d0
-          ddzvel = 0.0d0
+          ddyvel(j) = 0.0d0
+          ddxvel(j) = 0.0d0
+          ddzvel(j) = 0.0d0
       else
-          ddyvel = avgyvel - avgyvelold
-          ddxvel = avgxvel - avgxvelold
-          ddzvel = avgzvel - avgzvelold
+          ddyvel(j) = avgyvel(j) - avgyvelold(j)
+          ddxvel(j) = avgxvel(j) - avgxvelold(j)
+          ddzvel(j) = avgzvel(j) - avgzvelold(j)
       end if
 
-      avgyvelold = avgyvel
-      avgxvelold = avgxvel
-      avgzvelold = avgzvel
-      avgycforceold = avgycforce
-      avgxcforceold = avgxcforce
-      avgzcforceold = avgzcforce
+      avgyvelold(j) = avgyvel(j)
+      avgxvelold(j) = avgxvel(j)
+      avgzvelold(j) = avgzvel(j)
+      avgycforceold(j) = avgycforce(j)
+      avgxcforceold(j) = avgxcforce(j)
+      avgzcforceold(j) = avgzcforce(j)
 
-      xcf(istp) = avgxcforce -
-     &      (xcfcoeff(10)*(dy_new-y_drag_flip)*abs(dy_new-y_drag_flip)) !remove coupled term from hist
+      xcf(istp) = avgxcforce(j) -
+     &      (xcfcoeff(10)*(dy_new(j)-y_drag_flip)*abs(dy_new(j)-y_drag_flip)) !remove coupled term from hist
 
       if((mod(istp-1,ntout).eq.0).and.(istp.ne.1))then
           ixcf=ixcf+ntout !this is done so that sumxcf_o does not double count values. pattern looks like
       endif!1:1,1:2,..,1:1*ntout,
            !1*ntout+1:1*ntout+1,1*ntout+1:1*ntout+2,..,1*ntout+1:2*ntout
            !2*ntout+1:2*ntout+1,2*ntout+1:2*ntout+2,..,2*ntout+1:3*ntout
-      sumxcf = sum(xcf(ixcf:istp)) + sumxcf_o
-      avgxcf = sumxcf / real(lstep,8)
+      sumxcf = sum(xcf(ixcf:istp)) + sumxcf_o(j)
+      avgxcf(j) = sumxcf / real(lstep,8)
 
 !...best if numts_histyavg is < numxyzcflines. that way when doing
 !restart using cf algorithm, you don't need to worry about retaining 
@@ -1084,7 +1150,7 @@ c!----------------------------------------------------------------------
 !and you break simulation every 100 ts then you'll have to worry about
 ! retaining ycf data that spans over several nxyzcf.dat files, which 
 !is currently not an available option for running restart control force
-      ycf(istp) = avgycforce
+      ycf(istp) = avgycforce(j)
 !        if(myrank.eq.master)write(*,*)'i_res_cf=',i_res_cf
 !...Get start and end index of ycf from previous simulation
       if((i_res_cf.eq.1).and.(ycf_old_log.eqv..true.))then
@@ -1111,14 +1177,14 @@ c!----------------------------------------------------------------------
             numoldtsyhist = iyhisten - iyhistst + 1
             numnewtsyhist = numts_histyavg - numoldtsyhist
             sumycf = sumycf_old + sum(ycf(1:numnewtsyhist))
-            avgycf = sumycf / real(numts_histyavg,8)
+            avgycf(j) = sumycf / real(numts_histyavg,8)
 !        if(myrank.eq.master)write(*,*)'numoldtsyhist, numnewtsyhist ',
 !     &                                 numoldtsyhist,numnewtsyhist
 !        if(myrank.eq.master)write(*,*)'sumycf ',sumycf
 !        if(myrank.eq.master)write(*,*)'avgycf ',avgycf
 !        if(myrank.eq.master)write(*,*)
          elseif(ycf_old_log.eqv..false.)then
-                 avgycf = sum(ycf(istp-numts_histyavg+1:istp)) /
+                 avgycf(j) = sum(ycf(istp-numts_histyavg+1:istp)) /
      &                      real(numts_histyavg,8)
 !        if(myrank.eq.master)write(*,*)'avgycf ',avgycf
 !        if(myrank.eq.master)write(*,*)
@@ -1127,45 +1193,43 @@ c!----------------------------------------------------------------------
       elseif(i_res_cf.eq.0)then
 
              if(istp .ge. numts_histyavg)then
-                avgycf = sum(ycf(istp-numts_histyavg+1:istp)) /
+                avgycf(j) = sum(ycf(istp-numts_histyavg+1:istp)) /
      &                     real(numts_histyavg,8)
 
              else
-                avgycf = sum(ycf) / real(lstep,8)
-
+                avgycf(j) = sum(ycf) / real(lstep,8)
              endif
 
       endif !i_res_cf
 
-      zcf(istp) = avgzcforce
+      zcf(istp) = avgzcforce(j)
       if((mod(istp-1,ntout).eq.0).and.(istp.ne.1))then
           izcf=izcf+ntout
       end if
-      sumzcf = sum(zcf(izcf:istp)) + sumzcf_o
-      avgzcf = sumzcf / real(lstep,8)
+      sumzcf = sum(zcf(izcf:istp)) + sumzcf_o(j)
+      avgzcf(j) = sumzcf / real(lstep,8)
 
-      totalycforceold = totalycforce
-      totalxcforceold = totalxcforce
-      totalzcforceold = totalzcforce
-
+      totalycforceold(j) = totalycforce(j)
+      totalxcforceold(j) = totalxcforce(j)
+      totalzcforceold(j) = totalzcforce(j)
+      
       if(myrank.eq.master)then
-         write(741,736) time-delt(itseq), avgxdistance, 
-     &                    avgydistance, avgzdistance
-         write(742,737) lstep, avgxvel, avgyvel, avgzvel
-         write(743,738) totalxcforce, totalycforce, totalzcforce
-         write(744,738) avgxcf, avgycf, avgzcf
-         write(745,739) dx_new,dy_new,dz_new,ddxvel,ddyvel,ddzvel
-         write(746,738) avgxcforce, avgycforce, avgzcforce
-         write(747,740) lstep, time-delt(itseq), xcfnewtons, 
-     &                    ycfnewtons, zcfnewtons
-         write(748,738) xcf(istp), ycf(istp), zcf(istp)
+         write(7001+int(j)*10,736) time-delt(itseq), avgxdistance(j), 
+     &                    avgydistance(j), avgzdistance(j)
+         write(7002+int(j)*10,737) lstep, avgxvel(j), avgyvel(j), avgzvel(j)
+         write(7003+int(j)*10,738) totalxcforce(j), totalycforce(j), totalzcforce(j)
+         write(7004+int(j)*10,738) avgxcf(j), avgycf(j), avgzcf(j)
+         write(7005+int(j)*10,739) dx_new(j),dy_new(j),dz_new(j),ddxvel(j),ddyvel(j),ddzvel(j)
+         write(7006+int(j)*10,738) avgxcforce(j), avgycforce(j), avgzcforce(j)
+         write(7007+int(j)*10,740) lstep, time-delt(itseq), xcfnewtons(j), 
+     &                    ycfnewtons(j), zcfnewtons(j)
+         write(7008+int(j)*10,738) xcf(istp), ycf(istp), zcf(istp)
       end if
-
 !write the restart files for control forces
       if (mod(lstep, ntout) .eq. 0) then
 
-          sumxcf_o = sum(xcf(istp-ntout+1:istp)) + sumxcf_o
-          sumzcf_o = sum(zcf(istp-ntout+1:istp)) + sumzcf_o
+          sumxcf_o(j) = sum(xcf(istp-ntout+1:istp)) + sumxcf_o(j)
+          sumzcf_o(j) = sum(zcf(istp-ntout+1:istp)) + sumzcf_o(j)
 
 
           if(     lstep.ge.0 .and. lstep.le.9)then
@@ -1191,27 +1255,29 @@ c!----------------------------------------------------------------------
           end if
 
           if (myrank.eq.master) then
-
-             OPEN(unit=845,file='../lift-results/restarts/'//
+              bub_id = int(j)
+             write(id_char, '(I0)') bub_id 
+             OPEN(unit=8001+j*10,file='../controller/'//trim(id_char)//'_lift-results/restarts/'//
      &                    'restart_control_force'//
      &                    trim(lstepc)//'.dat',
      &         status="replace",action="write",iostat=ierror)
 
-             IF(ierror /= 0) STOP "Error opening file 845"
+             IF(ierror /= 0) STOP "Error opening file 845 -- postproc"
 
-        write(845,733)avgycf,avgycforceold,dy_new,avgyvelold,
-     &                ddyvel,avgydistold,ydistideal,sumycf_o,
-     &                avgxcf,avgxcforceold,dx_new,avgxvelold,
-     &                ddxvel,avgxdistold,xdistideal,sumxcf_o,
-     &                avgzcf,avgzcforceold,dz_new,avgzvelold,
-     &                ddzvel,avgzdistold,zdistideal,sumzcf_o,
+        write(8001+j*10,733)avgycf(j),avgycforceold(j),dy_new(j),avgyvelold(j),
+     &                ddyvel(j),avgydistold(j),ydistideal(j),sumycf_o(j),
+     &                avgxcf(j),avgxcforceold(j),dx_new(j),avgxvelold(j),
+     &                ddxvel(j),avgxdistold(j),xdistideal(j),sumxcf_o(j),
+     &                avgzcf(j),avgzcforceold(j),dz_new(j),avgzvelold(j),
+     &                ddzvel(j),avgzdistold(j),zdistideal(j),sumzcf_o(j),
      &                epsilon_lsd,delt(itseq),dtlset,CFLfl_max,
      &                CFLbuint_max,CFLls_max,vf_now,C_int_adjust
         write(*,*)' writing restart_control_force'//
      &                         trim(lstepc)//'.dat'
-             CLOSE(845)
+             CLOSE(8001+j*10)
           endif !myrank
       endif !mod(lstep, ntout)
+       end do ! temporary end of mpid
 
  733  format(32(ES22.15, 3x))
  736  format(ES22.15, 2x, ES22.15, 2x, ES22.15, 2x, ES22.15)
@@ -1310,7 +1376,7 @@ c======================================================================
      &        status="old",action="read",iostat=ierror)
             if(ierror /= 0) stop "file 702 creation error"
             do i=1,i_ts
-            read(702,712)avg_vts(i),avg_vel(i,1:3)
+            read(702)avg_vts(i),avg_vel(i,1:3)
             end do
             close(702)
 
