@@ -85,6 +85,7 @@
 #define four   4.0000000000000000000000000000000d0
 #define five   5.0000000000000000000000000000000d0
 #define pi   3.1415926535897932384626433832795d0
+#define maxbubs   5 // mpid, maximum number of bubbles
 
 #ifdef __cplusplus
 extern "C" {
@@ -257,75 +258,75 @@ extern "C" {
     double epsilonBT;
 
 // Magnus, bubble controller variables start
-    double xdistancesum;
-    double ydistancesum;
-    double zdistancesum;
-    double totalxdist;
-    double totalydist;
-    double totalzdist;
-    double avgxdistance;
-    double avgydistance;
-    double avgzdistance;
-    double avgxdistold;
-    double avgydistold;
-    double avgzdistold;
-    double xdistideal;
-    double ydistideal;
-    double zdistideal;
-    double dx_new;
-    double dy_new;
-    double dz_new;
-    double ddxvel;
-    double ddyvel;
-    double ddzvel;
-    double xvelsum;
-    double yvelsum;
-    double zvelsum;
-    double totalxvel;
-    double totalyvel;
-    double totalzvel;
-    double avgxvel;
-    double avgyvel;
-    double avgzvel;
-    double avgxvelold;
-    double avgyvelold;
-    double avgzvelold;
-    double velwghtsum;
-    double totalvelwght;
-    double bubvolsum;
-    double totbubvol;
-    double denssum;
-    double totbubdens;
-    double xcforcesum;
-    double ycforcesum;
-    double zcforcesum;
-    double totalxcforce;
-    double totalycforce;
-    double totalzcforce;
-    double totalxcforceold;
-    double totalycforceold;
-    double totalzcforceold;
-    double avgxcforce;
-    double avgycforce;
-    double avgzcforce;
-    double avgxcforceold;
-    double avgycforceold;
-    double avgzcforceold;
-    double avgxcf;
-    double avgycf;
-    double avgzcf;
-    double x_c_f;
-    double y_c_f;
-    double z_c_f;
-    double xforcenewtsum;
-    double yforcenewtsum;
-    double zforcenewtsum;
-    double totxfnewtsum;
-    double totyfnewtsum;
-    double totzfnewtsum;
-    double xcfnewtons;
-    double ycfnewtons;
-    double zcfnewtons;
+    double xdistancesum[maxbubs];
+    double ydistancesum[maxbubs];
+    double zdistancesum[maxbubs];
+    double totalxdist[maxbubs];
+    double totalydist[maxbubs];
+    double totalzdist[maxbubs];
+    double avgxdistance[maxbubs];
+    double avgydistance[maxbubs];
+    double avgzdistance[maxbubs];
+    double avgxdistold[maxbubs];
+    double avgydistold[maxbubs];
+    double avgzdistold[maxbubs];
+    double xdistideal[maxbubs];
+    double ydistideal[maxbubs];
+    double zdistideal[maxbubs];
+    double dx_new[maxbubs];
+    double dy_new[maxbubs];
+    double dz_new[maxbubs];
+    double ddxvel[maxbubs];
+    double ddyvel[maxbubs];
+    double ddzvel[maxbubs];
+    double xvelsum[maxbubs];
+    double yvelsum[maxbubs];
+    double zvelsum[maxbubs];
+    double totalxvel[maxbubs];
+    double totalyvel[maxbubs];
+    double totalzvel[maxbubs];
+    double avgxvel[maxbubs];
+    double avgyvel[maxbubs];
+    double avgzvel[maxbubs];
+    double avgxvelold[maxbubs];
+    double avgyvelold[maxbubs];
+    double avgzvelold[maxbubs];
+    double velwghtsum[maxbubs];
+    double totalvelwght[maxbubs];
+    double bubvolsum[maxbubs];
+    double totbubvol[maxbubs];
+    double denssum[maxbubs];
+    double totbubdens[maxbubs];
+    double xcforcesum[maxbubs];
+    double ycforcesum[maxbubs];
+    double zcforcesum[maxbubs];
+    double totalxcforce[maxbubs];
+    double totalycforce[maxbubs];
+    double totalzcforce[maxbubs];
+    double totalxcforceold[maxbubs];
+    double totalycforceold[maxbubs];
+    double totalzcforceold[maxbubs];
+    double avgxcforce[maxbubs];
+    double avgycforce[maxbubs];
+    double avgzcforce[maxbubs];
+    double avgxcforceold[maxbubs];
+    double avgycforceold[maxbubs];
+    double avgzcforceold[maxbubs];
+    double avgxcf[maxbubs];
+    double avgycf[maxbubs];
+    double avgzcf[maxbubs];
+    double x_c_f[maxbubs];
+    double y_c_f[maxbubs];
+    double z_c_f[maxbubs];
+    double xforcenewtsum[maxbubs];
+    double yforcenewtsum[maxbubs];
+    double zforcenewtsum[maxbubs];
+    double totxfnewtsum[maxbubs];
+    double totyfnewtsum[maxbubs];
+    double totzfnewtsum[maxbubs];
+    double xcfnewtons[maxbubs];
+    double ycfnewtons[maxbubs];
+    double zcfnewtons[maxbubs];
     double rholiq;
     double rhogas;
 // Magnus, bubble controller variables end
@@ -337,8 +338,8 @@ extern "C" {
     double avgzcoordold[100];
 
     int i_res_cf;   // bubble controller
-    int nzinBsum;   // bubble controller
-    int ntotnzinB;  // bubble controller
+    int nzinBsum[maxbubs];   // bubble controller
+    int ntotnzinB[maxbubs];  // bubble controller
 
     int iLSet;
     int iuse_vfcont_cap;
