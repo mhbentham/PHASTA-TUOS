@@ -9,7 +9,7 @@
         integer iyhistst, iyhisten
         real*8, allocatable ::  cf_var(:,:,:) ! 2d to 3d array for mpid
         real*8, allocatable ::  xcf(:), xcf_old(:)
-        real*8, allocatable ::  ycf(:), ycf_old(:)
+        real*8, allocatable ::  ycf(:,:), ycf_old(:,:)
         real*8, allocatable ::  zcf(:), zcf_old(:)
 
         end module

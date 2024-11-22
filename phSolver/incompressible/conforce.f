@@ -155,7 +155,7 @@ c======================================================================
 
       real*8  sumxcf_o(i_num_bubbles), sumycf_o(i_num_bubbles), sumzcf_o(i_num_bubbles)
       real*8  xcf_old_dummy
-      real*8  ycf_old_dummy
+      real*8, allocatable :: ycf_old_dummy(:,:)     !mpid, extend dimensions
       real*8  zcf_old_dummy
       real*8  cf_restart_array(32,i_num_bubbles) !mpid, extend dimensions
       real*8  oldcf_dt, oldcf_dtlset 
@@ -598,9 +598,10 @@ c======================================================================
           do i=1,nxyzcflines
            if((i.ge.ioldyhistst).and.(i.le.ioldyhisten))then
             indyhist = indyhist + 1
-            read(7008+bub_id*10,738)xcf_old_dummy,ycf_old(indyhist),zcf_old_dummy
+            read(7008+bub_id*10,738)xcf_old_dummy,ycf_old(indyhist,bub_id),zcf_old_dummy
            else
-            read(7008+bub_id*10,738)xcf_old_dummy,ycf_old_dummy,zcf_old_dummy
+            read(7008+bub_id*10,738)xcf_old_dummy,
+     &        ycf_old_dummy(indyhist,bub_id) ,zcf_old_dummy
            endif
 
           enddo !i=1,nxyzcflines
@@ -621,7 +622,7 @@ c======================================================================
           IF(ierror /= 0) STOP "Error opening file 749"
 
           do i=1,numoldyhistind
-           write(7009+bub_id*10,738)xcf_old_dummy,ycf_old(i),zcf_old_dummy
+           write(7009+bub_id*10,738)xcf_old_dummy,ycf_old(i,bub_id),zcf_old_dummy
           end do
           close(7009+bub_id*10)
 
@@ -1150,7 +1151,7 @@ c!----------------------------------------------------------------------
 !and you break simulation every 100 ts then you'll have to worry about
 ! retaining ycf data that spans over several nxyzcf.dat files, which 
 !is currently not an available option for running restart control force
-      ycf(istp) = avgycforce(j)
+      ycf(istp,j) = avgycforce(j)
 !        if(myrank.eq.master)write(*,*)'i_res_cf=',i_res_cf
 !...Get start and end index of ycf from previous simulation
       if((i_res_cf.eq.1).and.(ycf_old_log.eqv..true.))then
@@ -1162,7 +1163,7 @@ c!----------------------------------------------------------------------
 !     &                                 iyhistst,iyhisten
 !...Get the sum of the ycf array from previous simulation
           if(iyhistst.le.iyhisten)then
-             sumycf_old=sum(ycf_old(iyhistst:iyhisten))
+             sumycf_old=sum(ycf_old(iyhistst:iyhisten,j))
           end if
 !        if(myrank.eq.master)write(*,*)'sumycf_old ',sumycf_old
           if(iyhistst.gt.iyhisten)then
@@ -1176,7 +1177,7 @@ c!----------------------------------------------------------------------
          if(ycf_old_log.eqv..true.)then
             numoldtsyhist = iyhisten - iyhistst + 1
             numnewtsyhist = numts_histyavg - numoldtsyhist
-            sumycf = sumycf_old + sum(ycf(1:numnewtsyhist))
+            sumycf = sumycf_old + sum(ycf(1:numnewtsyhist,j))
             avgycf(j) = sumycf / real(numts_histyavg,8)
 !        if(myrank.eq.master)write(*,*)'numoldtsyhist, numnewtsyhist ',
 !     &                                 numoldtsyhist,numnewtsyhist
@@ -1184,7 +1185,7 @@ c!----------------------------------------------------------------------
 !        if(myrank.eq.master)write(*,*)'avgycf ',avgycf
 !        if(myrank.eq.master)write(*,*)
          elseif(ycf_old_log.eqv..false.)then
-                 avgycf(j) = sum(ycf(istp-numts_histyavg+1:istp)) /
+                 avgycf(j) = sum(ycf(istp-numts_histyavg+1:istp,j)) /
      &                      real(numts_histyavg,8)
 !        if(myrank.eq.master)write(*,*)'avgycf ',avgycf
 !        if(myrank.eq.master)write(*,*)
@@ -1193,7 +1194,7 @@ c!----------------------------------------------------------------------
       elseif(i_res_cf.eq.0)then
 
              if(istp .ge. numts_histyavg)then
-                avgycf(j) = sum(ycf(istp-numts_histyavg+1:istp)) /
+                avgycf(j) = sum(ycf(istp-numts_histyavg+1:istp,j)) /
      &                     real(numts_histyavg,8)
 
              else
@@ -1223,7 +1224,7 @@ c!----------------------------------------------------------------------
          write(7006+int(j)*10,738) avgxcforce(j), avgycforce(j), avgzcforce(j)
          write(7007+int(j)*10,740) lstep, time-delt(itseq), xcfnewtons(j), 
      &                    ycfnewtons(j), zcfnewtons(j)
-         write(7008+int(j)*10,738) xcf(istp), ycf(istp), zcf(istp)
+         write(7008+int(j)*10,738) xcf(istp), ycf(istp,j), zcf(istp)
       end if
 !write the restart files for control forces
       if (mod(lstep, ntout) .eq. 0) then

@@ -712,12 +712,12 @@ c
 
          if(iBT .eq. 0) then  ! if tracking
             if (myrank.eq.master) then
-               write(*,*) 'bubble tracking must be enabled for pid controller'
+               write(*,*) 'bubble tracking MUST be enabled for pid controller'
             end if
          endif !call so that we have i_num_bubbles
 
          allocate (xcf(nstep(1)))
-         allocate (ycf(nstep(1)))
+         allocate (ycf(nstep(1), i_num_bubbles))
          allocate (zcf(nstep(1)))
          xcf = zero
          ycf = zero
@@ -726,7 +726,7 @@ c
          numoldyhistind = numts_histyavg - 1
          if(myrank.eq.master) write(*,*) 'numoldyhistind =',
      &                                    numoldyhistind
-         allocate (ycf_old(numoldyhistind))
+         allocate (ycf_old(numoldyhistind, i_num_bubbles))
          if (myrank.eq.master) write(*,*) 'calling cfrestar...'
          CALL      CFrestar(ycf_old_log, numoldyhistind,
      &                      ixcf,        iycf,       izcf,
